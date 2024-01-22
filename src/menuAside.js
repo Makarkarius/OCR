@@ -1,6 +1,5 @@
 import {
   mdiAccountCircle,
-  mdiMonitor,
   mdiGithub,
   mdiLock,
   mdiAlertCircle,
@@ -9,15 +8,21 @@ import {
   mdiViewList,
   mdiTelevisionGuide,
   mdiResponsive,
-  mdiPalette,
-  mdiReact
+  mdiFileCompare,
+  mdiReact,
+  mdiMonitorDashboard
 } from '@mdi/js'
 
 export default [
   {
-    to: '/dashboard',
-    icon: mdiMonitor,
+    to: '/',
+    icon: mdiMonitorDashboard,
     label: 'Dashboard'
+  },
+  {
+    to: '/models',
+    label: 'Models',
+    icon: mdiFileCompare
   },
   {
     to: '/tables',
@@ -38,11 +43,6 @@ export default [
     to: '/responsive',
     label: 'Responsive',
     icon: mdiResponsive
-  },
-  {
-    to: '/',
-    label: 'Styles',
-    icon: mdiPalette
   },
   {
     to: '/profile',
