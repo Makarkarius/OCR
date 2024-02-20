@@ -83,7 +83,7 @@ const upload = (event) => {
 </script>
 
 <template>
-  <div class="flex items-stretch justify-start relative">
+  <div class="flex items-stretch justify-start">
     <label class="inline-flex">
       <BaseButton
         as="a"

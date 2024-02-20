@@ -22,6 +22,14 @@ const routes = [
   },
   {
     meta: {
+      title: 'Model creation'
+    },
+    path: '/models/new',
+    name: 'model creation',
+    component: () => import('@/views/ModelCreationView.vue')
+  },
+  {
+    meta: {
       title: 'Tables'
     },
     path: '/tables',

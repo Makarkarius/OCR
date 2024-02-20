@@ -18,6 +18,7 @@ export const useMainStore = defineStore('main', () => {
 
   const clients = ref([])
   const history = ref([])
+  const models = ref([])
 
   function setUser(payload) {
     if (payload.name) {
@@ -50,6 +51,17 @@ export const useMainStore = defineStore('main', () => {
       })
   }
 
+  function fetchSampleModels() {
+    axios
+      .get(`data-sources/models.json?v=3`)
+      .then((result) => {
+        models.value = result?.data?.data
+      })
+      .catch((error) => {
+        alert(error.message)
+      })
+  }
+
   return {
     userName,
     userEmail,
@@ -57,8 +69,10 @@ export const useMainStore = defineStore('main', () => {
     isFieldFocusRegistered,
     clients,
     history,
+    models,
     setUser,
     fetchSampleClients,
-    fetchSampleHistory
+    fetchSampleHistory,
+    fetchSampleModels
   }
 })

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { mdiChevronUp, mdiChevronDown, mdiAlertCircleOutline } from '@mdi/js'
+import { mdiChevronUp, mdiChevronDown, mdiAlertCircleOutline, mdiMinus } from '@mdi/js'
 import PillTag from '@/components/PillTag.vue'
 
 const props = defineProps({
@@ -34,6 +34,13 @@ const trendStyle = computed(() => {
     return {
       icon: mdiAlertCircleOutline,
       style: 'warning'
+    }
+  }
+
+  if (props.trendType === 'stable') {
+    return {
+      icon: mdiMinus,
+      style: 'info'
     }
   }
 
