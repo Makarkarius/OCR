@@ -16,7 +16,8 @@ const props = defineProps({
   hasTable: Boolean,
   isForm: Boolean,
   isHoverable: Boolean,
-  isModal: Boolean
+  isModal: Boolean,
+  isTransparent: Boolean
 })
 
 const emit = defineEmits(['submit'])

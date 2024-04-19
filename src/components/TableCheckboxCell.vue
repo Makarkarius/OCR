@@ -8,9 +8,9 @@ defineProps({
   }
 })
 
-const emit = defineEmits(['checked'])
+const checked = defineModel()
 
-const checked = ref(false)
+const emit = defineEmits(['checked'])
 
 watch(checked, (newVal) => {
   emit('checked', newVal)

@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue'
-import { mdiClose } from '@mdi/js'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import CardBox from '@/components/CardBox.vue'

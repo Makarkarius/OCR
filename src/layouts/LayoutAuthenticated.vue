@@ -1,20 +1,21 @@
 <script setup>
 import { mdiForwardburger, mdiBackburger, mdiMenu } from '@mdi/js'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import menuAside from '@/menuAside.js'
 import menuNavBar from '@/menuNavBar.js'
-import { useDarkModeStore } from '@/stores/darkMode.js'
 import BaseIcon from '@/components/BaseIcon.vue'
 import FormControl from '@/components/FormControl.vue'
 import NavBar from '@/components/NavBar.vue'
 import NavBarItemPlain from '@/components/NavBarItemPlain.vue'
 import AsideMenu from '@/components/AsideMenu.vue'
 import FooterBar from '@/components/FooterBar.vue'
+import { isAuthentificated } from '@/globals.js'
+import { useMainStore } from '@/stores/main'
 
 const layoutAsidePadding = 'xl:pl-60'
 
-const darkModeStore = useDarkModeStore()
+const mainStore = useMainStore()
 
 const router = useRouter()
 
@@ -26,13 +27,16 @@ router.beforeEach(() => {
   isAsideLgActive.value = false
 })
 
-const menuClick = (event, item) => {
-  if (item.isToggleLightDark) {
-    darkModeStore.set()
+onMounted(() => {
+  if (!isAuthentificated(mainStore.user)) {
+    router.push('/login')
   }
+})
 
+const menuClick = (event, item) => {
   if (item.isLogout) {
-    //
+    mainStore.resetUser()
+    router.push('/login')
   }
 }
 </script>
@@ -73,12 +77,7 @@ const menuClick = (event, item) => {
         @aside-lg-close-click="isAsideLgActive = false"
       />
       <slot />
-      <FooterBar>
-        Get more with
-        <a href="https://tailwind-vue.justboil.me/" target="_blank" class="text-blue-600"
-          >Premium version</a
-        >
-      </FooterBar>
+      <FooterBar> </FooterBar>
     </div>
   </div>
 </template>

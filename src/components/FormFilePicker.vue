@@ -24,7 +24,8 @@ const props = defineProps({
     type: String,
     default: 'info'
   },
-  isRoundIcon: Boolean
+  isRoundIcon: Boolean,
+  isMultiple: Boolean
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -48,7 +49,11 @@ watch(modelValueProp, (value) => {
 const upload = (event) => {
   const value = event.target.files || event.dataTransfer.files
 
-  file.value = value[0]
+  if (props.isMultiple) {
+    file.value = value
+  } else {
+    file.value = value[0]
+  }
 
   emit('update:modelValue', file.value)
 
@@ -99,6 +104,7 @@ const upload = (event) => {
         type="file"
         class="absolute top-0 left-0 w-full h-full opacity-0 outline-none cursor-pointer -z-1"
         :accept="accept"
+        :multiple="isMultiple"
         @input="upload"
       />
     </label>

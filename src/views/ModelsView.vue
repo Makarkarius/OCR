@@ -19,10 +19,10 @@ const {models} = storeToRefs(mainStore)
     <SectionMain>
       <div class="grid gap-6 mb-6 grid-cols-1 md:grid-cols-3 lg:grid-cols-4">
         <template v-for="model in models">
-            <ModelCard :name="model.name" :description="model.description" :previewURL="model.preview" :allTrend="model.trends?.all" :filledTrend="model.trends?.filled" />
+            <ModelCard :name="model.name" :description="model.description" :preview-u-r-l="model.preview" :all-trend="model.trends?.all" :filled-trend="model.trends?.filled" />
         </template>
 
-        <BaseFloatingButton :icon="mdiPlus" :roundedFull="true" color="contrast" iconSize="100%" class="h-12 w-12" to="/models/new" />
+        <BaseFloatingButton :icon="mdiPlus" :rounded-full="true" color="contrast" icon-size="100%" class="h-12 w-12" to="/models/new" />
       </div>
     </SectionMain>
   </LayoutAuthenticated>

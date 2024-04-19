@@ -1,32 +1,46 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import axios from 'axios'
 
 export const useMainStore = defineStore('main', () => {
-  const userName = ref('John Doe')
-  const userEmail = ref('doe.doe.doe@example.com')
+  class User {
+    constructor() {
+      this.name = 'unauthorized'
+      this.email = ''
+      this.token = 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWthcjEyNTJAbWFpbC5ydSIsImlhdCI6MTcxMzQ3OTY5MCwiZXhwIjoxNzEzNDgzMjkwLCJjdXJyZW50VXNlciI6IntcInBhc3N3b3JkXCI6XCIkMmEkMTAkVHVFdW1ucVZqbjR6NlM2NE8zSEJTZWFady5UZ2ltUjRqdHVNUGtrR0hGVVlvQlFlOGtPbG1cIixcImF1dGhvcml0aWVzXCI6W3tcImF1dGhvcml0eVwiOlwiUk9MRV9VU0VSXCJ9XSxcImVuYWJsZWRcIjp0cnVlLFwiYWNjb3VudE5vbkV4cGlyZWRcIjp0cnVlLFwiY3JlZGVudGlhbHNOb25FeHBpcmVkXCI6dHJ1ZSxcImFjY291bnROb25Mb2NrZWRcIjp0cnVlLFwidXNlcm5hbWVcIjpcIm1ha2FyMTI1MkBtYWlsLnJ1XCJ9In0.CgUL081sQ1TAJkdNUIx8GYw98-5Ilu7_ImEj6Wm-JNAuklOH79pIbrvSpZkdTYHf893mIVaHSOeiEww0ifoMbg'
+      this.avatarURL = ''
+    }
+  }
 
-  const userAvatar = computed(
-    () =>
-      `https://api.dicebear.com/7.x/avataaars/svg?seed=${userEmail.value.replace(
-        /[^a-z0-9]+/gi,
-        '-'
-      )}`
-  )
+  const user = ref(new User())
 
   const isFieldFocusRegistered = ref(false)
 
   const clients = ref([])
   const history = ref([])
   const models = ref([])
+  const realModels = ref([])
 
   function setUser(payload) {
     if (payload.name) {
-      userName.value = payload.name
+      user.value.name = payload.name
     }
     if (payload.email) {
-      userEmail.value = payload.email
+      user.value.email = payload.email
     }
+    if (payload.token) {
+      user.value.token = payload.token
+    }
+    if (payload.avatarURL) {
+      user.value.avatarURL = payload.avatarURL
+    }
+  }
+
+  function resetUser() {
+    user.value.name = ''
+    user.value.email = ''
+    user.value.token = ''
+    user.value.avatarURL = ''
   }
 
   function fetchSampleClients() {
@@ -63,14 +77,14 @@ export const useMainStore = defineStore('main', () => {
   }
 
   return {
-    userName,
-    userEmail,
-    userAvatar,
+    user,
     isFieldFocusRegistered,
     clients,
     history,
     models,
+    realModels,
     setUser,
+    resetUser,
     fetchSampleClients,
     fetchSampleHistory,
     fetchSampleModels

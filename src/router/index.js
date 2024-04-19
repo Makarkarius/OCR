@@ -22,6 +22,14 @@ const routes = [
   },
   {
     meta: {
+      title: 'Labeler'
+    },
+    path: '/labeler',
+    name: 'labeler',
+    component: () => import('@/views/LabelerView.vue')
+  },
+  {
+    meta: {
       title: 'Model creation'
     },
     path: '/models/new',

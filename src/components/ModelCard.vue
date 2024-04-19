@@ -63,7 +63,7 @@ const getTrendValue = (trend) => {
 </script>
 
 <template>
-  <CardBoxModal button="danger" buttonLabel="Yes" v-model="isDeleteModalActive" :has-cancel="true" :title="`Are you sure you want to delete ` + name + ` model?`">
+  <CardBoxModal v-model="isDeleteModalActive" button="danger" button-label="Yes" :has-cancel="true" :title="`Are you sure you want to delete ` + name + ` model?`">
   </CardBoxModal>
 
   <CardBox class="overflow-hidden shadow-md p-4" :has-component-layout="true">
