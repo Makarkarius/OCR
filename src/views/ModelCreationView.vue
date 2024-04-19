@@ -2,6 +2,7 @@
 import SectionMain from '@/components/SectionMain.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
 import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useMainStore } from '@/stores/main'
 import { mdiFileDocumentPlus, mdiGithub, mdiLabel } from '@mdi/js'
 import SectionTitleLineWithButton from '@/components/SectionTitleLineWithButton.vue'
@@ -17,6 +18,8 @@ import UserSearch from '@/components/UserSearch.vue'
 import axios from 'axios'
 import { SERVER_URL } from '@/globals.js'
 
+const router = useRouter()
+
 const mainStore = useMainStore()
 
 const form = reactive({
@@ -29,20 +32,38 @@ const form = reactive({
 
 let projectID = ''
 
+const getDocumentID = () => {
+  let docID = ''
+
+  console.log('projectID = ', projectID)
+  axios
+    .get(SERVER_URL + '/v1/project/' + projectID, {
+      headers: {
+        'Authorization': mainStore.user.token
+      }
+    })
+    .then((result) => {
+      console.log(result)
+
+      docID = result?.data?.document[0]?.id
+    })
+    .catch((error) => {
+      alert(error.message)
+    })
+
+  return docID
+}
+
 const addDocument = (doc) => {
-  const formData = new FormData("documents", doc);
+  const formData = new FormData('documents', doc)
 
   axios
-    .post(
-      SERVER_URL + '/v1/project' + ' ' + projectID + ':upload-documents',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': mainStore.user.token
-        }
+    .post(SERVER_URL + '/v1/project/' + projectID + ':upload-documents', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': mainStore.user.token
       }
-    )
+    })
     .then((result) => {
       console.log(result)
     })
@@ -86,6 +107,9 @@ const createModel = () => {
       for (let i in form.rawOtherDocuments) {
         addDocument(form.rawOtherDocuments[i])
       }
+
+      let documentID = getDocumentID()
+      router.push('/labeler/' + documentID)
     })
     .catch((error) => {
       alert(error.message)
@@ -93,10 +117,13 @@ const createModel = () => {
 }
 
 const submit = () => {
+  router.push('/labeler/' + '49da0a1d-43c7-4a55-805b-d260e96e8039')
+  return
+
   console.log(form)
 
-  if (form.rawReferenceDocument?.name === 'placeholder' || form.rawReferenceDocument?.name === "") {
-    alert("Upload reference document")
+  if (form.rawReferenceDocument?.name === 'placeholder' || form.rawReferenceDocument?.name === '') {
+    alert('Upload reference document')
     return
   }
   if (form.rawOtherDocuments.length === 0) {

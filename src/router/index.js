@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Home from '@/views/HomeView.vue'
+import Labeler from '@/views/LabelerView.vue'
 
 const routes = [
   {
@@ -24,9 +25,9 @@ const routes = [
     meta: {
       title: 'Labeler'
     },
-    path: '/labeler',
+    path: '/labeler/:id',
     name: 'labeler',
-    component: () => import('@/views/LabelerView.vue')
+    component: Labeler
   },
   {
     meta: {
@@ -101,5 +102,8 @@ const router = createRouter({
     return savedPosition || { top: 0 }
   }
 })
+
+router.addRoute({ path: '/labeler', component: Labeler })
+router.replace(router.currentRoute.value.fullPath)
 
 export default router

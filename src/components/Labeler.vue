@@ -1,7 +1,78 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { fabric } from 'fabric'
-import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { useMainStore } from '@/stores/main'
+import FormField from '@/components/FormField.vue'
+import FormControl from '@/components/FormControl.vue'
+import axios from 'axios'
+import { SERVER_URL } from '@/globals.js'
+import BaseButton from '@/components/BaseButton.vue'
+
+const mainStore = useMainStore()
+
+const route = useRoute()
+
+const getDocument = () => {
+  let imageURL = ""
+  console.log(route.params.id)
+  axios
+    .get(SERVER_URL + '/v1/document/' + route.params.id, {
+      headers: {
+        'Authorization': mainStore.user.token
+      }
+    })
+    .then((result) => {
+      console.log(result)
+
+      imageURL = result?.data?.urlPath
+    })
+    .catch((error) => {
+      alert(error.message)
+    })
+
+    return imageURL
+}
+
+const submit = () => {
+  let labelsData = []
+  const image = labeler.value.image
+  console.log(image)
+
+  for (let i in labels.value) {
+    const label = labels.value[i].canvasObject
+    labelsData.push({
+      labelName: labels.value[i].name,
+      x: label.left - image.left,
+      y: label.top - image.top,
+      width: label.width / image.scaleX,
+      height: label.height / image.scaleY,
+      rotate: label.angle,
+    })
+  }
+
+  const formData = {
+    labels: labelsData,
+    isLabeled: true,
+    assessor: mainStore.user.email
+  }
+
+  console.log(formData)
+
+  axios
+    .post(SERVER_URL + '/v1/document/' + route.params.id, formData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': mainStore.user.token
+      }
+    })
+    .then((result) => {
+      console.log(result)
+    })
+    .catch((error) => {
+      alert(error.message)
+    })
+}
 
 function normalizeNumber(val) {
   return val === undefined ? 0 : val
@@ -217,7 +288,7 @@ class ImageLabeler {
     })
     canvas.add(rect)
 
-    const label = new ImageLabel(rect, 'name', 'desc')
+    const label = new ImageLabel(rect, labels.value.length + '', '')
     labels.value.push(label)
 
     return label
@@ -322,25 +393,38 @@ const container = ref(null)
 
 const labels = ref(null)
 
-onMounted(() => {
-  const labeler = new ImageLabeler(container.value)
+const labeler = ref(null)
 
-  labeler.loadImage(
-    'https://blogs.covchurch.org/delp/wp-content/uploads/sites/9/2015/11/DelpEphraim_Passport-001.jpg'
+onMounted(() => {
+  // const imageURL = getDocument()
+  let imageURL = "https://kotletka-po-kievski.storage.yandexcloud.net/ef123788-e4e8-4ce4-997a-f6d264646089"
+
+  labeler.value = new ImageLabeler(container.value)
+  console.log(imageURL)
+  labeler.value.loadImage(
+    imageURL
   )
-  window.addEventListener('resize', labeler.resize())
+  window.addEventListener('resize', labeler.value.resize())
 })
 </script>
 
 <template>
-  <div class="flex flex-row h-full w-full">
-    <div ref="container" class="basis-2/3 h-full w-full overflow-hidden" />
-    <div class="basis-1/3">
-      <div v-for="label in labels" class="fill-blue-300 bg-cyan-300">
-        {{ label.name }}
-        {{ label.description }}
+  <div class="flex flex-row max-h-modal h-full w-full justify-between">
+    <div ref="container" class="basis-8/12 h-full w-full" />
+    <div class="basis-3/12 overflow-scroll relative max-h-modal flex flex-col gap-y-6">
+      <div v-for="label in labels">
+        <FormField label="Name"  class="mb-[-0rem]">
+          <FormControl v-model="label.name" />
+        </FormField>
+        <FormField label="Description" >
+          <FormControl v-model="label.description" />
+        </FormField>
       </div>
     </div>
+  </div>
+
+  <div>
+    <BaseButton type="submit" color="info" label="save" @click="submit" />
   </div>
 </template>
 
