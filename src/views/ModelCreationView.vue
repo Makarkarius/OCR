@@ -32,58 +32,52 @@ const form = reactive({
 
 let projectID = ''
 
-const getDocumentID = () => {
-  let docID = ''
-
-  console.log('projectID = ', projectID)
-  axios
-    .get(SERVER_URL + '/v1/project/' + projectID, {
+const getDocumentID = async () => {
+  try {
+    const response = await axios.get(SERVER_URL + '/v1/project/' + projectID, {
       headers: {
         'Authorization': mainStore.user.token
       }
     })
-    .then((result) => {
-      console.log(result)
 
-      docID = result?.data?.document[0]?.id
-    })
-    .catch((error) => {
-      alert(error.message)
-    })
+    console.log(response)
 
-  return docID
-}
+    let docID = response?.data?.document[0]?.id
 
-const addDocument = (doc) => {
-  const formData = new FormData('documents', doc)
-
-  axios
-    .post(SERVER_URL + '/v1/project/' + projectID + ':upload-documents', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': mainStore.user.token
-      }
-    })
-    .then((result) => {
-      console.log(result)
-    })
-    .catch((error) => {
-      alert(error.message)
-    })
-}
-
-const createModel = () => {
-  let assessors = []
-  for (let i in form.assessors) {
-    assessors.push({
-      userID: form.assessors[i].id,
-      role: 'assessor'
-    })
+    return docID
+  } catch (error) {
+    alert(error.message)
   }
-  console.log(assessors)
+}
 
-  axios
-    .post(
+const addDocument = async (doc) => {
+  const formData = new FormData()
+  formData.append('documents', doc)
+
+  await axios({
+    method: 'post',
+    url: SERVER_URL + '/v1/project/' + projectID + ':upload-documents',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'Authorization': mainStore.user.token
+    }
+  }).catch((error) => {
+    alert(error.message)
+  })
+}
+
+const createModel = async () => {
+  try {
+    let assessors = []
+    for (let i in form.assessors) {
+      assessors.push({
+        userID: form.assessors[i].id,
+        role: 'assessor'
+      })
+    }
+
+    let response = await axios.post(
       SERVER_URL + '/v1/project',
       {
         name: form.name,
@@ -97,28 +91,26 @@ const createModel = () => {
         }
       }
     )
-    .then((result) => {
-      console.log(result)
 
-      projectID = result?.data?.id
-      mainStore.realModels.value.push(projectID)
+    projectID = response?.data?.id
 
-      addDocument(form.rawReferenceDocument)
-      for (let i in form.rawOtherDocuments) {
-        addDocument(form.rawOtherDocuments[i])
-      }
+    await addDocument(form.rawReferenceDocument)
 
-      let documentID = getDocumentID()
-      router.push('/labeler/' + documentID)
-    })
-    .catch((error) => {
-      alert(error.message)
-    })
+    for (let i = 0; i < form.rawOtherDocuments.length; i++) {
+      await addDocument(form.rawOtherDocuments[i])
+    }
+
+    let documentID = await getDocumentID()
+
+    router.push('/labeler/' + documentID)
+  } catch (error) {
+    alert(error.message)
+  }
 }
 
 const submit = () => {
-  router.push('/labeler/' + '49da0a1d-43c7-4a55-805b-d260e96e8039')
-  return
+  // router.push('/labeler/' + '49da0a1d-43c7-4a55-805b-d260e96e8039')
+  // return
 
   console.log(form)
 

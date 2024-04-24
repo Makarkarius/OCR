@@ -47,14 +47,13 @@ const login = () => {
       }
     )
     .then((result) => {
-      console.log(result)
-
       mainStore.setUser({
         email: form.email,
-        token: result?.data?.type + ' ' + result?.data?.accessToken
+        token: result?.data?.type + ' ' + result?.data?.accessToken,
+        id: result?.data?.id
       })
 
-      router.push('/')
+      router.push('/models')
     })
     .catch((error) => {
       alert(error.message)

@@ -13,31 +13,25 @@ const mainStore = useMainStore()
 
 const route = useRoute()
 
-const getDocument = () => {
-  let imageURL = ""
-  console.log(route.params.id)
-  axios
+const getDocument = async () => {
+  try {
+    let response = await axios
     .get(SERVER_URL + '/v1/document/' + route.params.id, {
       headers: {
         'Authorization': mainStore.user.token
       }
     })
-    .then((result) => {
-      console.log(result)
 
-      imageURL = result?.data?.urlPath
-    })
-    .catch((error) => {
-      alert(error.message)
-    })
-
+    let imageURL = response?.data?.urlPath
     return imageURL
+  } catch (error) {
+      alert(error.message)
+  }
 }
 
 const submit = () => {
   let labelsData = []
   const image = labeler.value.image
-  console.log(image)
 
   for (let i in labels.value) {
     const label = labels.value[i].canvasObject
@@ -47,7 +41,7 @@ const submit = () => {
       y: label.top - image.top,
       width: label.width / image.scaleX,
       height: label.height / image.scaleY,
-      rotate: label.angle,
+      rotate: label.angle
     })
   }
 
@@ -57,10 +51,8 @@ const submit = () => {
     assessor: mainStore.user.email
   }
 
-  console.log(formData)
-
   axios
-    .post(SERVER_URL + '/v1/document/' + route.params.id, formData, {
+    .patch(SERVER_URL + '/v1/document/' + route.params.id, formData, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': mainStore.user.token
@@ -70,7 +62,15 @@ const submit = () => {
       console.log(result)
     })
     .catch((error) => {
-      alert(error.message)
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+      } else if (error.request) {
+        console.log(error.request);
+      } else {
+        console.log('Error', error.message);
+      }
     })
 }
 
@@ -395,15 +395,11 @@ const labels = ref(null)
 
 const labeler = ref(null)
 
-onMounted(() => {
-  // const imageURL = getDocument()
-  let imageURL = "https://kotletka-po-kievski.storage.yandexcloud.net/ef123788-e4e8-4ce4-997a-f6d264646089"
+onMounted(async () => {
+  const imageURL = await getDocument()
 
   labeler.value = new ImageLabeler(container.value)
-  console.log(imageURL)
-  labeler.value.loadImage(
-    imageURL
-  )
+  labeler.value.loadImage(imageURL)
   window.addEventListener('resize', labeler.value.resize())
 })
 </script>
@@ -413,10 +409,10 @@ onMounted(() => {
     <div ref="container" class="basis-8/12 h-full w-full" />
     <div class="basis-3/12 overflow-scroll relative max-h-modal flex flex-col gap-y-6">
       <div v-for="label in labels">
-        <FormField label="Name"  class="mb-[-0rem]">
+        <FormField label="Name" class="mb-[-0rem]">
           <FormControl v-model="label.name" />
         </FormField>
-        <FormField label="Description" >
+        <FormField label="Description">
           <FormControl v-model="label.description" />
         </FormField>
       </div>

@@ -15,21 +15,21 @@ import {
 } from '@mdi/js'
 
 export default [
-  {
-    to: '/',
-    icon: mdiMonitorDashboard,
-    label: 'Dashboard'
-  },
+  // {
+  //   to: '/',
+  //   icon: mdiMonitorDashboard,
+  //   label: 'Dashboard'
+  // },
   {
     to: '/models',
     label: 'Models',
     icon: mdiFileCompare
   },
-  {
-    to: '/labeler',
-    label: 'Labeler',
-    icon: mdiVectorSquarePlus
-  },
+  // {
+  //   to: '/labeler',
+  //   label: 'Labeler',
+  //   icon: mdiVectorSquarePlus
+  // },
   // {
   //   to: '/tables',
   //   label: 'Tables',

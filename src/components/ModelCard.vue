@@ -8,8 +8,17 @@ import BaseButton from './BaseButton.vue'
 import CardBoxComponentTitle from './CardBoxComponentTitle.vue'
 import CardBoxWidget from './CardBoxWidget.vue'
 import ModelCardComponentTitle from './/ModelCardComponentTitle.vue'
+import axios from 'axios'
+import { SERVER_URL } from '@/globals.js'
+import { useMainStore } from '@/stores/main'
+
+const mainStore = useMainStore()
 
 const props = defineProps({
+  id: {
+    type: String,
+    required: true
+  },
   previewURL: {
     type: String,
     default: '../../public/pic.jpg'
@@ -38,6 +47,8 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['update'])
+
 const isDeleteModalActive = ref(false)
 
 const getTrendType = (trend) => {
@@ -60,50 +71,96 @@ const getTrendValue = (trend) => {
   return trend + '%'
 }
 
+const deleteModel = () => {
+  axios
+    .delete(SERVER_URL + '/v1/project/' + props.id, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: mainStore.user.token
+      }
+    })
+    .then((result) => {
+      emit('update')
+    })
+    .catch((error) => {
+      alert(error.message)
+    })
+}
+
+const showModal = () => {
+  isDeleteModalActive.value = true
+}
 </script>
 
 <template>
-  <CardBoxModal v-model="isDeleteModalActive" button="danger" button-label="Yes" :has-cancel="true" :title="`Are you sure you want to delete ` + name + ` model?`">
+  <CardBoxModal
+    v-model="isDeleteModalActive"
+    button="danger"
+    button-label="Yes"
+    :hasCancel="true"
+    :title="`Are you sure you want to delete ` + name + ` model?`"
+    @confirm="deleteModel"
+  >
   </CardBoxModal>
 
-  <CardBox class="overflow-hidden shadow-md p-4" :has-component-layout="true">
+  <CardBox
+    class="overflow-hidden shadow-md p-4 hover:scale-105 transition-scale duration-500 cursor-pointer"
+    :hasComponentLayout="true"
+  >
     <ModelCardComponentTitle :title="name">
-      <div class="grid grid-cols-3 gap-1">
-        <BaseButton :icon="mdiChartBar" color="whiteDark" rounded-full @click="isDeleteModalActive = true" />
-        <BaseButton :icon="mdiPencil" color="whiteDark" rounded-full @click="isDeleteModalActive = true" />
-        <BaseButton :icon="mdiTrashCan" color="whiteDark" rounded-full @click="isDeleteModalActive = true" />
+      <div class="grid grid-cols-2 gap-1">
+        <BaseButton
+          :icon="mdiChartBar"
+          color="whiteDark"
+          rounded-full
+          @click="showModal"
+        />
+        <!-- <BaseButton
+          :icon="mdiPencil"
+          color="whiteDark"
+          rounded-full
+          @click="showModal"
+        /> -->
+        <BaseButton
+          :icon="mdiTrashCan"
+          color="whiteDark"
+          rounded-full
+          @click="showModal"
+        />
       </div>
     </ModelCardComponentTitle>
 
     <div class="space-y-3">
-        <p class="line-clamp-1">{{ description }}</p>
+      <p class="line-clamp-1">{{ description }}</p>
 
-        <div class="grid grid-cols-2 justify-between">
-          <CardBoxWidget
-            :trend="getTrendValue(allTrend.trend)"
-            :trend-type="getTrendType(allTrend.trend)"
-            color="text-emerald-500"
-            :number="allTrend.number"
-            label="Documents"
-          />
-          <CardBoxWidget
-            :trend="getTrendValue(filledTrend.trend)"
-            :trend-type="getTrendType(filledTrend.trend)"
-            color="text-emerald-500"
-            :number="filledTrend.number"
-            label="Filled"
-          />
-        </div>
+      <div class="grid grid-cols-2 justify-between">
+        <CardBoxWidget
+          :trend="getTrendValue(allTrend.trend)"
+          :trend-type="getTrendType(allTrend.trend)"
+          color="text-emerald-500"
+          :number="allTrend.number"
+          label="Documents"
+        />
+        <CardBoxWidget
+          :trend="getTrendValue(filledTrend.trend)"
+          :trend-type="getTrendType(filledTrend.trend)"
+          color="text-emerald-500"
+          :number="filledTrend.number"
+          label="Filled"
+        />
+      </div>
 
-        <progress class="flex self-center w-full" max="100" :value="100 * filledTrend.number / (allTrend.number === 0 ? 1 : allTrend.number)">
-        </progress>
+      <progress
+        class="flex self-center w-full"
+        max="100"
+        :value="(100 * filledTrend.number) / (allTrend.number === 0 ? 1 : allTrend.number)"
+      ></progress>
 
-        <div class="relative w-full h-48 overflow-hidden rounded-md">
-            <img :src="previewURL" class="object-fill grayscale relative m-auto" />
-        </div>
+      <div class="relative w-full h-48 overflow-hidden rounded-md">
+        <img :src="previewURL" class="object-fill grayscale relative m-auto" />
+      </div>
     </div>
 
-    <template #footer>
-    </template>
+    <template #footer> </template>
   </CardBox>
 </template>

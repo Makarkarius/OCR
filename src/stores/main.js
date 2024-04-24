@@ -1,14 +1,18 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
+import { SERVER_URL } from '@/globals.js'
 
 export const useMainStore = defineStore('main', () => {
   class User {
     constructor() {
-      this.name = 'unauthorized'
+      this.token = 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWthcjEyNTJAbWFpbC5ydSIsImlhdCI6MTcxMzYxOTg1NCwiZXhwIjoxNzEzNjIzNDU0LCJjdXJyZW50VXNlciI6IntcInBhc3N3b3JkXCI6XCIkMmEkMTAkNmhzbW1VdzFSZDlJOEMyMDhYQ0w2ZWZpekZWYnBKLk1BRWRVMVZKZm5EdXZJUU8zcnZMNG1cIixcImF1dGhvcml0aWVzXCI6W3tcImF1dGhvcml0eVwiOlwiUk9MRV9VU0VSXCJ9XSxcImVuYWJsZWRcIjp0cnVlLFwiYWNjb3VudE5vbkxvY2tlZFwiOnRydWUsXCJhY2NvdW50Tm9uRXhwaXJlZFwiOnRydWUsXCJjcmVkZW50aWFsc05vbkV4cGlyZWRcIjp0cnVlLFwidXNlcm5hbWVcIjpcIm1ha2FyMTI1MkBtYWlsLnJ1XCJ9In0.Wp4qC0h7nXYQWwtLn4Q-s7VDHS0T_iAWRF3zi8u2e9wepl83V5bX08-ILLE9lAxVMZLMjXqevo1vUHNkEqq3eA'
+      this.type = ''
+      this.id = 'd227c6b9-eeb0-4ec8-80ec-8862638b900f'
       this.email = ''
-      this.token = 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWthcjEyNTJAbWFpbC5ydSIsImlhdCI6MTcxMzQ3OTY5MCwiZXhwIjoxNzEzNDgzMjkwLCJjdXJyZW50VXNlciI6IntcInBhc3N3b3JkXCI6XCIkMmEkMTAkVHVFdW1ucVZqbjR6NlM2NE8zSEJTZWFady5UZ2ltUjRqdHVNUGtrR0hGVVlvQlFlOGtPbG1cIixcImF1dGhvcml0aWVzXCI6W3tcImF1dGhvcml0eVwiOlwiUk9MRV9VU0VSXCJ9XSxcImVuYWJsZWRcIjp0cnVlLFwiYWNjb3VudE5vbkV4cGlyZWRcIjp0cnVlLFwiY3JlZGVudGlhbHNOb25FeHBpcmVkXCI6dHJ1ZSxcImFjY291bnROb25Mb2NrZWRcIjp0cnVlLFwidXNlcm5hbWVcIjpcIm1ha2FyMTI1MkBtYWlsLnJ1XCJ9In0.CgUL081sQ1TAJkdNUIx8GYw98-5Ilu7_ImEj6Wm-JNAuklOH79pIbrvSpZkdTYHf893mIVaHSOeiEww0ifoMbg'
-      this.avatarURL = ''
+      this.name = 'unauthorized'
+      this.surname = ''
+      this.company = ''
     }
   }
 
@@ -25,22 +29,29 @@ export const useMainStore = defineStore('main', () => {
     if (payload.name) {
       user.value.name = payload.name
     }
-    if (payload.email) {
-      user.value.email = payload.email
-    }
+    // if (payload.email) {
+    //   user.value.email = payload.email
+    // }
     if (payload.token) {
       user.value.token = payload.token
     }
     if (payload.avatarURL) {
       user.value.avatarURL = payload.avatarURL
     }
+    if (payload.id) {
+      user.value.id = payload.id
+    }
+    console.log(payload)
   }
 
   function resetUser() {
-    user.value.name = ''
-    user.value.email = ''
     user.value.token = ''
-    user.value.avatarURL = ''
+    user.value.type = ''
+    user.value.id = ''
+    user.value.email = ''
+    user.value.name = ''
+    user.value.surname = ''
+    user.value.company = ''
   }
 
   function fetchSampleClients() {
@@ -76,6 +87,17 @@ export const useMainStore = defineStore('main', () => {
       })
   }
 
+  function fetchModels() {
+    axios
+      .get(SERVER_URL + '/v1/project?userId=' + user.value.id)
+      .then((result) => {
+        realModels.value = result?.data
+      })
+      .catch((error) => {
+        alert(error.message)
+      })
+  }
+
   return {
     user,
     isFieldFocusRegistered,
@@ -87,6 +109,7 @@ export const useMainStore = defineStore('main', () => {
     resetUser,
     fetchSampleClients,
     fetchSampleHistory,
-    fetchSampleModels
+    fetchSampleModels,
+    fetchModels
   }
 })
