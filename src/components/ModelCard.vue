@@ -11,8 +11,10 @@ import ModelCardComponentTitle from './/ModelCardComponentTitle.vue'
 import axios from 'axios'
 import { SERVER_URL } from '@/globals.js'
 import { useMainStore } from '@/stores/main'
+import { useRouter } from 'vue-router'
 
 const mainStore = useMainStore()
+const router = useRouter()
 
 const props = defineProps({
   id: {
@@ -83,12 +85,25 @@ const deleteModel = () => {
       emit('update')
     })
     .catch((error) => {
-      alert(error.message)
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+      } else if (error.request) {
+        console.log(error.request);
+      } else {
+        console.log('Error', error.message);
+      }
     })
 }
 
-const showModal = () => {
+const showDeleteModal = (e) => {
+  e.stopPropagation()
   isDeleteModalActive.value = true
+}
+
+const toModel = () => {
+  router.push('/models/' + props.id)
 }
 </script>
 
@@ -106,6 +121,7 @@ const showModal = () => {
   <CardBox
     class="overflow-hidden shadow-md p-4 hover:scale-105 transition-scale duration-500 cursor-pointer"
     :hasComponentLayout="true"
+    @click="toModel"
   >
     <ModelCardComponentTitle :title="name">
       <div class="grid grid-cols-2 gap-1">
@@ -113,19 +129,12 @@ const showModal = () => {
           :icon="mdiChartBar"
           color="whiteDark"
           rounded-full
-          @click="showModal"
         />
-        <!-- <BaseButton
-          :icon="mdiPencil"
-          color="whiteDark"
-          rounded-full
-          @click="showModal"
-        /> -->
         <BaseButton
           :icon="mdiTrashCan"
           color="whiteDark"
           rounded-full
-          @click="showModal"
+          @click="showDeleteModal($event)"
         />
       </div>
     </ModelCardComponentTitle>

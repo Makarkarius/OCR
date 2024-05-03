@@ -1,42 +1,42 @@
-import { fileURLToPath, URL } from "node:url";
-import { SERVER_URL } from "./src/globals.js"
+import { fileURLToPath, URL } from 'node:url'
+import { SERVER_URL } from '@/globals'
 
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
 
-// https://vitejs.dev/config/
 export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
-  switch(command) {
-    case "build":
+  switch (command) {
+    case 'build':
       return {
-        base: "/",
+        base: '/',
         plugins: [vue()],
         resolve: {
           alias: {
-            "@": fileURLToPath(new URL("./src", import.meta.url)),
-          },
+            '@': fileURLToPath(new URL('./src', import.meta.url))
+          }
         }
       }
-    case "serve":
+    case 'serve':
       return {
-        base: "/",
+        base: '/',
         plugins: [vue()],
         resolve: {
           alias: {
-            "@": fileURLToPath(new URL("./src", import.meta.url)),
-          },
+            '@': fileURLToPath(new URL('./src', import.meta.url))
+          }
         },
         server: {
+          port: 8082,
+          strictPort: true,
           proxy: {
-            "/api": {
+            '/api': {
               target: SERVER_URL,
               changeOrigin: true,
               secure: false,
-              rewrite: (path) => path.replace(/^\/api/, ""),
-            },
-          },
-        },
-
+              rewrite: (path) => path.replace(/^\/api/, '')
+            }
+          }
+        }
       }
   }
-});
+})

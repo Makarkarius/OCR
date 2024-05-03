@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { fabric } from 'fabric'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useMainStore } from '@/stores/main'
 import FormField from '@/components/FormField.vue'
 import FormControl from '@/components/FormControl.vue'
@@ -10,7 +10,7 @@ import { SERVER_URL } from '@/globals.js'
 import BaseButton from '@/components/BaseButton.vue'
 
 const mainStore = useMainStore()
-
+const router = useRouter()
 const route = useRoute()
 
 const getDocument = async () => {
@@ -25,7 +25,15 @@ const getDocument = async () => {
     let imageURL = response?.data?.urlPath
     return imageURL
   } catch (error) {
-      alert(error.message)
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+      } else if (error.request) {
+        console.log(error.request);
+      } else {
+        console.log('Error', error.message);
+      }
   }
 }
 
@@ -60,6 +68,7 @@ const submit = () => {
     })
     .then((result) => {
       console.log(result)
+      router.push("/models")
     })
     .catch((error) => {
       if (error.response) {

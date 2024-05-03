@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Home from '@/views/HomeView.vue'
 import Labeler from '@/views/LabelerView.vue'
+import Model from '@/views/ModelView.vue'
 
 const routes = [
   {
@@ -28,6 +29,14 @@ const routes = [
     path: '/labeler/:id',
     name: 'labeler',
     component: Labeler
+  },
+  {
+    meta: {
+      title: 'Model'
+    },
+    path: '/models/:id',
+    name: 'model',
+    component: Model
   },
   {
     meta: {

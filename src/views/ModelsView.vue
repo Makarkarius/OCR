@@ -2,18 +2,13 @@
 import SectionMain from '@/components/SectionMain.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
 import ModelCard from '@/components/ModelCard.vue'
-import { computed, ref, onMounted } from 'vue'
-import { useMainStore } from '@/stores/main'
-import { storeToRefs } from 'pinia'
+import {useMainStore} from '@/stores/main'
 import BaseFloatingButton from '@/components/BaseFloatingButton.vue'
-import { mdiPlus } from '@mdi/js'
+import {mdiPlus} from '@mdi/js'
 
 const mainStore = useMainStore()
 mainStore.fetchModels()
 
-onMounted(() => {
-  
-})
 </script>
 
 <template>
@@ -24,7 +19,7 @@ onMounted(() => {
             <ModelCard :name="model.name" :description="model.description" :previewURL="model.preview" :all-trend="model.trends?.all" :filled-trend="model.trends?.filled" />
         </template> -->
 
-        <template v-for="model in mainStore.realModels">
+        <template v-for="model in mainStore.realModels" :key="model.projectId">
           <ModelCard
             :id="model.projectId"
             :name="model.name"
