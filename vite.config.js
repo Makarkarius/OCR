@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
-import { SERVER_URL } from '@/globals'
+import { SERVER_URL } from './src/globals'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'

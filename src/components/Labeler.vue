@@ -16,24 +16,24 @@ const route = useRoute()
 const getDocument = async () => {
   try {
     let response = await axios
-    .get(SERVER_URL + '/v1/document/' + route.params.id, {
-      headers: {
-        'Authorization': mainStore.user.token
-      }
-    })
+      .get(SERVER_URL + '/v1/document/' + route.params.id, {
+        headers: {
+          'Authorization': mainStore.user.token
+        }
+      })
 
     let imageURL = response?.data?.urlPath
     return imageURL
   } catch (error) {
-      if (error.response) {
-        console.log(error.response.data);
-        console.log(error.response.status);
-        console.log(error.response.headers);
-      } else if (error.request) {
-        console.log(error.request);
-      } else {
-        console.log('Error', error.message);
-      }
+    if (error.response) {
+      console.log(error.response.data)
+      console.log(error.response.status)
+      console.log(error.response.headers)
+    } else if (error.request) {
+      console.log(error.request)
+    } else {
+      console.log('Error', error.message)
+    }
   }
 }
 
@@ -68,17 +68,17 @@ const submit = () => {
     })
     .then((result) => {
       console.log(result)
-      router.push("/models")
+      router.push('/models')
     })
     .catch((error) => {
       if (error.response) {
-        console.log(error.response.data);
-        console.log(error.response.status);
-        console.log(error.response.headers);
+        console.log(error.response.data)
+        console.log(error.response.status)
+        console.log(error.response.headers)
       } else if (error.request) {
-        console.log(error.request);
+        console.log(error.request)
       } else {
-        console.log('Error', error.message);
+        console.log('Error', error.message)
       }
     })
 }
@@ -237,7 +237,7 @@ class ImageLabeler {
       canvas.setActiveObject(label.canvasObject)
     })
 
-    canvas.on('mouse:wheel', function (event) {
+    canvas.on('mouse:wheel', function(event) {
       var delta = event.e.deltaY
       var zoom = canvas.getZoom()
       zoom *= 0.999 ** delta
@@ -400,7 +400,7 @@ class ImageLabeler {
 
 const container = ref(null)
 
-const labels = ref(null)
+const labels = ref([])
 
 const labeler = ref(null)
 
@@ -414,22 +414,22 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-row max-h-modal h-full w-full justify-between">
-    <div ref="container" class="basis-8/12 h-full w-full" />
-    <div class="basis-3/12 overflow-scroll relative max-h-modal flex flex-col gap-y-6">
-      <div v-for="label in labels">
-        <FormField label="Name" class="mb-[-0rem]">
-          <FormControl v-model="label.name" />
+  <div class='flex flex-row max-h-modal h-full w-full justify-between'>
+    <div ref='container' class='basis-8/12 h-full w-full' />
+    <div class='basis-3/12 overflow-scroll relative max-h-modal flex flex-col gap-y-6'>
+      <div v-for='label in labels'>
+        <FormField label='Name' class='mb-[-0rem]'>
+          <FormControl v-model='label.name' />
         </FormField>
-        <FormField label="Description">
-          <FormControl v-model="label.description" />
+        <FormField label='Description'>
+          <FormControl v-model='label.description' />
         </FormField>
       </div>
     </div>
   </div>
 
   <div>
-    <BaseButton type="submit" color="info" label="save" @click="submit" />
+    <BaseButton type='submit' color='info' label='save' @click='submit' />
   </div>
 </template>
 

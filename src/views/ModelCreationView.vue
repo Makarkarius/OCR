@@ -23,6 +23,7 @@ const router = useRouter()
 const form = reactive({
   name: '',
   description: '',
+  documents: [],
   rawReferenceDocument: new File([''], 'placeholder'),
   rawOtherDocuments: [],
   assessors: []
@@ -100,8 +101,7 @@ const createModel = async () => {
       },
       {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': mainStore.user.token
+          'Content-Type': 'application/json'
         }
       }
     )

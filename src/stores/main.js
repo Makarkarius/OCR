@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
+import { deleteCookie, setCookie } from '@/globals'
+import { handleApiError } from '@/errors'
 
 export const useMainStore = defineStore('main', () => {
-
   class User {
     constructor() {
       this.id = ''
@@ -19,6 +20,7 @@ export const useMainStore = defineStore('main', () => {
         console.log('failed to init user: payload is empty')
         return
       }
+
       const data = payload.data
       if (data.id) {
         this.id = data.id
@@ -38,6 +40,42 @@ export const useMainStore = defineStore('main', () => {
       if (data.company) {
         this.company = data.company
       }
+
+      setCookie('id', this.id, {
+        'max-age': 3600 * 24 * 365,
+        'same-site': 'strict'
+      })
+    }
+
+    reset() {
+      this.id = ''
+      this.email = ''
+      this.name = ''
+      this.surname = ''
+      this.role = ''
+      this.company = ''
+
+      deleteCookie('id')
+    }
+
+    async fetch(uid) {
+      if (!uid) {
+        return
+      }
+
+      await axios
+        .get(
+          '/api/v1/user/' + uid,
+          {
+            withCredentials: true
+          }
+        )
+        .then((result) => {
+          this.init(result)
+        })
+        .catch((err) => {
+          handleApiError(err)
+        })
     }
 
     async login(email, password, company) {
@@ -58,14 +96,11 @@ export const useMainStore = defineStore('main', () => {
         .then((result) => {
           this.init(result)
         })
-        .catch((error) => {
-          if (error.response) {
-            throw new Error(error.response.data?.errors[0]?.message)
-          } else if (error.request) {
-            console.log(error.request)
-          } else {
-            console.log('Error', error.message)
+        .catch((err) => {
+          if (err.response.status === 400) {
+            throw new Error('Invalid login or password')
           }
+          handleApiError(err)
         })
     }
 
@@ -86,17 +121,12 @@ export const useMainStore = defineStore('main', () => {
             }
           }
         )
-        .then(() => {
-          this.login(email, password, company)
+        .then(async () => {
+          await this.login(email, password, company)
         })
-        .catch((error) => {
-          if (error.response) {
-            throw new Error(error.response.data?.errors[0]?.message)
-          } else if (error.request) {
-            console.log(error.request)
-          } else {
-            console.log('Error', error.message)
-          }
+        .catch(err => {
+          // console.log('fuckk')
+          handleApiError(err)
         })
     }
   }
@@ -116,71 +146,88 @@ export const useMainStore = defineStore('main', () => {
   }
 
   class Model {
-    constructor(data = {
-      id: '',
-      name: '',
-      description: '',
-      createdAt: '',
-      documents: [],
-      participants: []
-    }) {
-      this.id = data?.id
-      this.name = data?.name
-      this.description = data?.description
-      this.createdAt = data?.createdAt
-      this.documents = data?.documents
-      this.participants = data?.participants
+    constructor() {
+      this.id = ''
+      this.createdAt = ''
+
+      this.name = ''
+      this.description = ''
+      this.documents = []
+      this.participants = []
+      this.previewURL = ''
+      this.userRole = ''
+    }
+
+    init(payload) {
+      if (!payload.data) {
+        console.log('failed to init model: payload is empty')
+        return
+      }
+
+      const data = payload.data
+
+      if (data.userRole) {
+        this.role = data.userRole
+      }
+      if (data.id) {
+        this.id = data.id
+      }
+      if (data.name) {
+        this.name = data.name
+      }
+      if (data.description) {
+        this.description = data.description
+      }
+      if (data.createdAt) {
+        this.createdAt = data.createdAt
+      }
+      if (data.previewURL) {
+        this.previewURL = data.previewURL
+      }
+      if (data.documents) {
+        this.documents = data.documents
+      }
+      if (data.participants) {
+        this.participants = data.participants
+      }
+    }
+
+    async create() {
+      try {
+        const response = await axios.post(
+          'api/v1/project',
+          {
+            name: this.name,
+            description: this.description,
+            participants: this.participants
+          }, {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            withCredentials: true
+          }
+        )
+
+        this.id = response?.data?.id
+
+        // await addDocument(form.rawReferenceDocument)
+        //
+        // for (let i = 0; i < form.rawOtherDocuments.length; i++) {
+        //   await addDocument(form.rawOtherDocuments[i])
+        // }
+      } catch (err) {
+        handleApiError(err)
+      }
     }
   }
 
-  const user = ref(new User())
-
   const isFieldFocusRegistered = ref(false)
 
+  const user = ref(new User())
   const clients = ref([])
   const users = ref([])
   const history = ref([])
   const models = ref([])
-  const realModels = ref([])
-
-  function setUser(payload) {
-    if (payload.id) {
-      user.value.id = payload.id
-    }
-    if (payload.email) {
-      user.value.email = payload.email
-    }
-    if (payload.name) {
-      user.value.name = payload.name
-    }
-    if (payload.surname) {
-      user.value.name = payload.surname
-    }
-    if (payload.role) {
-      user.value.name = payload.role
-    }
-    if (payload.token) {
-      user.value.token = payload.token
-    }
-    if (payload.avatarURL) {
-      user.value.avatarURL = payload.avatarURL
-    }
-    if (payload.company) {
-      user.value.company = payload.company
-    }
-
-    console.log(payload)
-  }
-
-  function resetUser() {
-    user.value.token = ''
-    user.value.type = ''
-    user.value.id = ''
-    user.value.email = ''
-    user.value.name = ''
-    user.value.surname = ''
-    user.value.company = ''
-  }
 
   function fetchSampleClients() {
     axios
@@ -204,23 +251,13 @@ export const useMainStore = defineStore('main', () => {
   async function fetchUsers() {
     await axios
       .get('/api/v1/user?company=' + user.value.company, {
-        headers: {
-          'Authorization': user.value.token
-        }
+        withCredentials: true
       })
       .then((result) => {
         users.value = result?.data
       })
-      .catch((error) => {
-        if (error.response) {
-          console.log(error.response.data)
-          console.log(error.response.status)
-          console.log(error.response.headers)
-        } else if (error.request) {
-          console.log(error.request)
-        } else {
-          console.log('Error', error.message)
-        }
+      .catch((err) => {
+        handleApiError(err)
       })
   }
 
@@ -265,24 +302,23 @@ export const useMainStore = defineStore('main', () => {
   async function fetchModels() {
     await axios
       .get('/api/v1/project?userId=' + user.value.id, {
-        headers: {
-          'Authorization': user.value.token
-        },
         withCredentials: true
       })
       .then((result) => {
-        realModels.value = result?.data
+        models.value = []
+        if (!result.data || result.data.length === 0) {
+          return
+        }
+
+        result.data.forEach((model) => {
+          const newModel = new Model()
+          newModel.init(model)
+
+          models.value.push(newModel)
+        })
       })
       .catch((error) => {
-        if (error.response) {
-          console.log(error.response.data)
-          console.log(error.response.status)
-          console.log(error.response.headers)
-        } else if (error.request) {
-          console.log(error.request)
-        } else {
-          console.log('Error', error.message)
-        }
+        handleApiError(error)
       })
   }
 
@@ -293,9 +329,6 @@ export const useMainStore = defineStore('main', () => {
     users,
     history,
     models,
-    realModels,
-    setUser,
-    resetUser,
     fetchSampleClients,
     fetchUsers,
     fetchSampleHistory,

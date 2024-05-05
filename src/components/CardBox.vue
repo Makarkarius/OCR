@@ -30,7 +30,8 @@ const componentClass = computed(() => {
   const base = [
     props.rounded,
     props.flex,
-    props.isModal ? 'dark:bg-slate-900' : 'dark:bg-slate-900/70'
+    props.isModal ? 'dark:bg-slate-900' : 'dark:bg-slate-900/70',
+    props.isTransparent ? 'bg-transparent' : 'bg-white'
   ]
 
   if (props.isHoverable) {
@@ -48,17 +49,17 @@ const submit = (event) => {
 <template>
   <component
     :is="isForm ? 'form' : 'div'"
-    :class="componentClass"
-    class="bg-white flex"
-    @submit="submit"
+    :class='componentClass'
+    class='flex'
+    @submit='submit'
   >
-    <slot v-if="hasComponentLayout" />
+    <slot v-if='hasComponentLayout' />
     <template v-else>
-      <CardBoxComponentBody :no-padding="hasTable">
+      <CardBoxComponentBody :no-padding='hasTable'>
         <slot />
       </CardBoxComponentBody>
-      <CardBoxComponentFooter v-if="hasFooterSlot">
-        <slot name="footer" />
+      <CardBoxComponentFooter v-if='hasFooterSlot'>
+        <slot name='footer' />
       </CardBoxComponentFooter>
     </template>
   </component>

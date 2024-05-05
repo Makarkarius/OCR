@@ -1,6 +1,6 @@
 <script setup>
-import { mdiForwardburger, mdiBackburger, mdiMenu } from '@mdi/js'
-import { onMounted, ref } from 'vue'
+import { mdiBackburger, mdiForwardburger, mdiMenu } from '@mdi/js'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import menuAside from '@/menuAside.js'
 import menuNavBar from '@/menuNavBar.js'
@@ -10,7 +10,6 @@ import NavBar from '@/components/NavBar.vue'
 import NavBarItemPlain from '@/components/NavBarItemPlain.vue'
 import AsideMenu from '@/components/AsideMenu.vue'
 import FooterBar from '@/components/FooterBar.vue'
-import { isAuthentificated } from '@/globals.js'
 import { useMainStore } from '@/stores/main'
 
 const layoutAsidePadding = 'xl:pl-60'
@@ -27,15 +26,9 @@ router.beforeEach(() => {
   isAsideLgActive.value = false
 })
 
-onMounted(() => {
-  if (!isAuthentificated(mainStore.user)) {
-    router.push('/login')
-  }
-})
-
 const menuClick = (event, item) => {
   if (item.isLogout) {
-    mainStore.resetUser()
+    mainStore.user.reset()
     router.push('/login')
   }
 }
@@ -49,35 +42,35 @@ const menuClick = (event, item) => {
   >
     <div
       :class="[layoutAsidePadding, { 'ml-60 lg:ml-0': isAsideMobileExpanded }]"
-      class="pt-14 min-h-screen w-screen transition-position lg:w-auto bg-gray-50 dark:bg-slate-800 dark:text-slate-100"
+      class='pt-14 min-h-screen w-screen transition-position lg:w-auto bg-gray-50 dark:bg-slate-800 dark:text-slate-100'
     >
       <NavBar
-        :menu="menuNavBar"
+        :menu='menuNavBar'
         :class="[layoutAsidePadding, { 'ml-60 lg:ml-0': isAsideMobileExpanded }]"
-        @menu-click="menuClick"
+        @menu-click='menuClick'
       >
         <NavBarItemPlain
-          display="flex lg:hidden"
-          @click.prevent="isAsideMobileExpanded = !isAsideMobileExpanded"
+          display='flex lg:hidden'
+          @click.prevent='isAsideMobileExpanded = !isAsideMobileExpanded'
         >
-          <BaseIcon :path="isAsideMobileExpanded ? mdiBackburger : mdiForwardburger" size="24" />
+          <BaseIcon :path='isAsideMobileExpanded ? mdiBackburger : mdiForwardburger' size='24' />
         </NavBarItemPlain>
-        <NavBarItemPlain display="hidden lg:flex xl:hidden" @click.prevent="isAsideLgActive = true">
-          <BaseIcon :path="mdiMenu" size="24" />
+        <NavBarItemPlain display='hidden lg:flex xl:hidden' @click.prevent='isAsideLgActive = true'>
+          <BaseIcon :path='mdiMenu' size='24' />
         </NavBarItemPlain>
         <NavBarItemPlain use-margin>
-          <FormControl placeholder="Search (ctrl+k)" ctrl-k-focus transparent borderless />
+          <FormControl placeholder='Search (ctrl+k)' ctrl-k-focus transparent borderless />
         </NavBarItemPlain>
       </NavBar>
       <AsideMenu
-        :is-aside-mobile-expanded="isAsideMobileExpanded"
-        :is-aside-lg-active="isAsideLgActive"
-        :menu="menuAside"
-        @menu-click="menuClick"
-        @aside-lg-close-click="isAsideLgActive = false"
+        :is-aside-mobile-expanded='isAsideMobileExpanded'
+        :is-aside-lg-active='isAsideLgActive'
+        :menu='menuAside'
+        @menu-click='menuClick'
+        @aside-lg-close-click='isAsideLgActive = false'
       />
       <slot />
-      <FooterBar> </FooterBar>
+      <FooterBar></FooterBar>
     </div>
   </div>
 </template>

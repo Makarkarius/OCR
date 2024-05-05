@@ -17,6 +17,8 @@ const mainStore = useMainStore()
 const router = useRouter()
 
 const form = reactive({
+  name: 'Makar',
+  surname: 'Kim',
   email: 'makar1252@mail.ru',
   password: 'password',
   passwordSubmit: 'password',
@@ -29,6 +31,7 @@ const authError = ref('')
 
 const switchType = () => {
   isRegister.value ^= true
+  isAuthError.value = false
 }
 
 const renderError = (message) => {
@@ -43,13 +46,17 @@ const submit = async () => {
         renderError('Passwords does not match!')
         return
       }
-      await mainStore.user.register('Kal', 'Kalich', form.email, form.password, form.company)
+      await mainStore.user.register(form.name, form.surname, form.email, form.password, form.company)
     } else {
       await mainStore.user.login(form.email, form.password, form.company)
     }
     await router.push('/models')
   } catch (e) {
-    renderError(e.message)
+    if (e.message) {
+      renderError(e.message)
+    } else {
+      console.error(e)
+    }
   }
 }
 </script>
@@ -58,12 +65,24 @@ const submit = async () => {
   <LayoutGuest>
     <SectionFullScreen v-slot='{ cardClass }' bg='purplePink'>
       <CardBox :class='cardClass' is-form @submit.prevent='submit'>
-        <NotificationBarInCard color='danger' v-if='isAuthError'>
-          <span><b class='capitalize'>{{ authError }}</b></span>
+        <NotificationBarInCard v-if='isAuthError' color='danger'>
+          <span><b>{{ authError }}</b></span>
         </NotificationBarInCard>
 
         <FormField :label="isRegister ? 'Register' : 'Login'" help='Enter email'>
-          <FormControl v-model='form.email' :icon='mdiAccount' name='email' autocomplete='email' />
+          <FormControl v-model='form.email' :icon='mdiAccount' name='email' type='email' autocomplete='email' />
+        </FormField>
+
+        <FormField v-if='isRegister' label='Name' help='Enter name'>
+          <FormControl
+            v-model='form.name' :icon='mdiAccount' name='name' type='text' autocomplete='given-name'
+            autocapitalize='on' capitalize />
+        </FormField>
+
+        <FormField v-if='isRegister' label='Surname' help='Enter surname'>
+          <FormControl
+            v-model='form.surname' :icon='mdiAccount' name='surname' type='text'
+            autocomplete='family-name' autocapitalize='on' capitalize />
         </FormField>
 
         <FormField label='Password' help='Enter password'>
@@ -91,6 +110,7 @@ const submit = async () => {
             v-model='form.company'
             :icon='mdiDomain'
             name='company'
+            type='text'
             autocomplete='organization'
           />
         </FormField>

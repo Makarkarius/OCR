@@ -1,46 +1,30 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { mdiChartBar, mdiPencil, mdiTrashCan } from '@mdi/js'
+import { ref } from 'vue'
+import { mdiChartBar, mdiTrashCan } from '@mdi/js'
 import CardBoxModal from './CardBoxModal.vue'
 import CardBox from '@/components/CardBox.vue'
-import CardBoxComponentHeadImage from './CardBoxComponentHeadImage.vue'
 import BaseButton from './BaseButton.vue'
-import CardBoxComponentTitle from './CardBoxComponentTitle.vue'
-import CardBoxWidget from './CardBoxWidget.vue'
 import ModelCardComponentTitle from './/ModelCardComponentTitle.vue'
 import axios from 'axios'
 import { SERVER_URL } from '@/globals.js'
-import { useMainStore } from '@/stores/main'
 import { useRouter } from 'vue-router'
+import CardBoxWidget from '@/components/CardBoxWidget.vue'
 
-const mainStore = useMainStore()
 const router = useRouter()
 
 const props = defineProps({
-  id: {
-    type: String,
+  model: {
+    type: Object,
     required: true
   },
-  previewURL: {
-    type: String,
-    default: '../../public/pic.jpg'
-  },
-  name: {
-    type: String,
-    default: 'Model name'
-  },
-  description: {
-    type: String,
-    default: 'Model description'
-  },
-  allTrend: {
+  allDocuments: {
     type: Object,
     default: {
       trend: 0,
       number: 0
     }
   },
-  filledTrend: {
+  filledDocuments: {
     type: Object,
     default: {
       trend: 0,
@@ -75,10 +59,9 @@ const getTrendValue = (trend) => {
 
 const deleteModel = () => {
   axios
-    .delete(SERVER_URL + '/v1/project/' + props.id, {
+    .delete(SERVER_URL + '/v1/project/' + model.id, {
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: mainStore.user.token
+        'Content-Type': 'application/json'
       }
     })
     .then((result) => {
@@ -86,13 +69,13 @@ const deleteModel = () => {
     })
     .catch((error) => {
       if (error.response) {
-        console.log(error.response.data);
-        console.log(error.response.status);
-        console.log(error.response.headers);
+        console.log(error.response.data)
+        console.log(error.response.status)
+        console.log(error.response.headers)
       } else if (error.request) {
-        console.log(error.request);
+        console.log(error.request)
       } else {
-        console.log('Error', error.message);
+        console.log('Error', error.message)
       }
     })
 }
@@ -103,73 +86,74 @@ const showDeleteModal = (e) => {
 }
 
 const toModel = () => {
-  router.push('/models/' + props.id)
+  router.push('/models/' + props.model.id)
 }
 </script>
 
 <template>
+  <!--TODO: move upper to view-->
   <CardBoxModal
-    v-model="isDeleteModalActive"
-    button="danger"
-    button-label="Yes"
-    :hasCancel="true"
-    :title="`Are you sure you want to delete ` + name + ` model?`"
-    @confirm="deleteModel"
+    v-model='isDeleteModalActive'
+    button='danger'
+    button-label='Yes'
+    :hasCancel='true'
+    :title='`Are you sure you want to delete ` + model.name + ` model?`'
+    @confirm='deleteModel'
   >
   </CardBoxModal>
 
   <CardBox
-    class="overflow-hidden shadow-md p-4 hover:scale-105 transition-scale duration-500 cursor-pointer"
-    :hasComponentLayout="true"
-    @click="toModel"
+    class='overflow-hidden shadow-md p-4 hover:scale-105 transition-scale duration-500 cursor-pointer'
+    :hasComponentLayout='true'
+    @click='toModel'
   >
-    <ModelCardComponentTitle :title="name">
-      <div class="grid grid-cols-2 gap-1">
+    <ModelCardComponentTitle :title='model.name'>
+      <div class='grid grid-cols-2 gap-1'>
         <BaseButton
-          :icon="mdiChartBar"
-          color="whiteDark"
+          :icon='mdiChartBar'
+          color='whiteDark'
           rounded-full
         />
         <BaseButton
-          :icon="mdiTrashCan"
-          color="whiteDark"
+          :icon='mdiTrashCan'
+          color='whiteDark'
           rounded-full
-          @click="showDeleteModal($event)"
+          @click='showDeleteModal($event)'
         />
       </div>
     </ModelCardComponentTitle>
 
-    <div class="space-y-3">
-      <p class="line-clamp-1">{{ description }}</p>
+    <div class='space-y-3'>
+      <p class='line-clamp-1'>{{ model.description }}</p>
 
-      <div class="grid grid-cols-2 justify-between">
+      <div class='grid grid-cols-2 justify-between'>
         <CardBoxWidget
-          :trend="getTrendValue(allTrend.trend)"
-          :trend-type="getTrendType(allTrend.trend)"
-          color="text-emerald-500"
-          :number="allTrend.number"
-          label="Documents"
+          :trend='getTrendValue(allDocuments.trend)'
+          :trend-type='getTrendType(allDocuments.trend)'
+          color='text-emerald-500'
+          :number='allDocuments.number'
+          label='Documents'
         />
         <CardBoxWidget
-          :trend="getTrendValue(filledTrend.trend)"
-          :trend-type="getTrendType(filledTrend.trend)"
-          color="text-emerald-500"
-          :number="filledTrend.number"
-          label="Filled"
+          :trend='getTrendValue(filledDocuments.trend)'
+          :trend-type='getTrendType(filledDocuments.trend)'
+          color='text-emerald-500'
+          :number='filledDocuments.number'
+          label='Filled'
         />
       </div>
 
       <progress
-        class="flex self-center w-full"
-        max="100"
-        :value="(100 * filledTrend.number) / (allTrend.number === 0 ? 1 : allTrend.number)"
-      ></progress>
+        class='flex self-center w-full'
+        max='100'
+        :value='(100 * filledDocuments.number) / (allDocuments.number === 0 ? 1 : allDocuments.number)'
+      />
 
-      <div class="relative w-full h-48 overflow-hidden rounded-md">
-        <img :src="previewURL" class="object-fill grayscale relative m-auto" />
+      <div class='relative w-full h-full overflow-hidden rounded-md'>
+        <img :src='model.previewURL' class='object-fill grayscale relative m-auto' />
       </div>
     </div>
 
-    <template #footer> </template>
+    <template #footer></template>
   </CardBox>
 </template>
