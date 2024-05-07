@@ -1,17 +1,27 @@
 <script setup>
-import {computed, onMounted, onUnmounted, ref} from 'vue'
-import {useMainStore} from '@/stores/main'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useMainStore } from '@/stores/main'
 import CardBox from '@/components/CardBox.vue'
 import TableCheckboxCell from '@/components/TableCheckboxCell.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import OverlayLayer from '@/components/OverlayLayer.vue'
-import FormField from '@/components/FormField.vue';
-import FormControl from '@/components/FormControl.vue';
+import FormField from '@/components/FormField.vue'
+import FormControl from '@/components/FormControl.vue'
 
 const mainStore = useMainStore()
 
-const usersModel = defineModel('users', {
+onMounted(async () => {
+  window.addEventListener('keydown', keyHandler)
+  await mainStore.fetchUsers()
+  assessors.value = users.value
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', keyHandler)
+})
+
+const selectedUsers = defineModel('selectedUsers', {
   type: Array
 })
 
@@ -22,7 +32,7 @@ const isVisible = defineModel('isVisible', {
 const emit = defineEmits(['update:modelValue', 'close'])
 
 const confirm = () => {
-  usersModel.value = checkedRows.value
+  selectedUsers.value = checkedRows.value
   close()
 }
 
@@ -60,21 +70,21 @@ const remove = (arr, cb) => {
 
 const checked = (isChecked, assessor) => {
   if (isChecked) {
-    checkedRows.value.push(assessor);
+    checkedRows.value.push(assessor)
   } else {
-    checkedRows.value = remove(checkedRows.value, (row) => row.id === assessor.id);
+    checkedRows.value = remove(checkedRows.value, (row) => row.id === assessor.id)
   }
 }
 
-const searchText = ref("")
+const searchText = ref('')
 
 const search = (event) => {
   console.log(assessors)
-  let normalized = event.toLowerCase();
+  let normalized = event.toLowerCase()
 
   assessors.value = users.value.filter(client => {
-    const name = client.name.toLowerCase();
-    return name.includes(normalized);
+    const name = client.name.toLowerCase()
+    return name.includes(normalized)
   })
 }
 
@@ -84,44 +94,34 @@ const keyHandler = (e) => {
   }
 }
 
-onMounted(async () => {
-  window.addEventListener('keydown', keyHandler)
-  await mainStore.fetchUsers()
-  assessors.value = users.value
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', keyHandler)
-})
-
 </script>
 
 <template>
-  <OverlayLayer v-show="isVisible" @overlay-click="cancel">
+  <OverlayLayer v-show='isVisible' @overlay-click='cancel'>
     <CardBox
-      class="shadow-lg h-modal w-8/12 md:w-1/2 lg:w-7/12 z-50"
+      class='shadow-lg h-modal w-8/12 md:w-1/2 lg:w-5/12 z-50'
       is-modal
-      :has-component-layout="false"
-      :has-table="true"
+      :has-component-layout='false'
+      :has-table='true'
     >
 
-      <FormField class="mb-0 py-0 rounded-2xl overflow-hidden">
-        <FormControl v-model="searchText" placeholder="Super cool model" borderless
-                     @update:model-value="search($event)"/>
+      <FormField class='mb-0 py-0 rounded-2xl overflow-hidden'>
+        <FormControl v-model='searchText' placeholder='Super cool model' borderless
+                     @update:model-value='search($event)' />
       </FormField>
 
-      <div class="overflow-scroll relative min-h-[50h] max-h-[50vh]">
+      <div class='overflow-scroll relative min-h-[50h] max-h-[50vh]'>
         <table>
           <tbody>
-          <tr v-for="client in assessors" :key="client.id">
-            <TableCheckboxCell v-model="client.checked" @checked="checked($event, client)"/>
-            <td data-label="Name">
-              {{ client.name }}
+          <tr v-for='client in assessors' :key='client.id'>
+            <TableCheckboxCell v-model='client.checked' @checked='checked($event, client)' />
+            <td data-label='Name'>
+              {{ client.surname + ' ' + client.name }}
             </td>
-            <td data-label="Login">
-              {{ client.surname }}
+            <td data-label='Login'>
+              {{ client.email }}
             </td>
-            <td data-label="ID">
+            <td data-label='ID'>
               {{ client.id }}
             </td>
           </tr>
@@ -130,8 +130,8 @@ onUnmounted(() => {
       </div>
       <template #footer>
         <BaseButtons>
-          <BaseButton label="Confirm" color="info" @click="confirm"/>
-          <BaseButton label="Cancel" color="danger" outline @click="cancel"/>
+          <BaseButton label='Confirm' color='info' @click='confirm' />
+          <BaseButton label='Cancel' color='danger' outline @click='cancel' />
         </BaseButtons>
       </template>
     </CardBox>

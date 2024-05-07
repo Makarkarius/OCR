@@ -15,8 +15,6 @@ const router = useRouter()
 
 const isEmpty = computed(() => mainStore.models.length === 0)
 
-console.log(mainStore.models)
-
 onBeforeMount(async () => {
   await mainStore.fetchModels()
 })

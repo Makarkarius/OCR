@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
-import { deleteCookie, setCookie } from '@/globals'
+import { deleteCookie, setCookie } from '@/misc'
 import { handleApiError } from '@/errors'
+import { documentTypes } from '@/config'
 
 export const useMainStore = defineStore('main', () => {
   class User {
@@ -15,13 +16,12 @@ export const useMainStore = defineStore('main', () => {
       this.company = ''
     }
 
-    init(payload) {
-      if (!payload.data) {
+    init(data) {
+      if (!data) {
         console.log('failed to init user: payload is empty')
         return
       }
 
-      const data = payload.data
       if (data.id) {
         this.id = data.id
       }
@@ -71,7 +71,7 @@ export const useMainStore = defineStore('main', () => {
           }
         )
         .then((result) => {
-          this.init(result)
+          this.init(result.data)
         })
         .catch((err) => {
           handleApiError(err)
@@ -94,7 +94,7 @@ export const useMainStore = defineStore('main', () => {
           }
         )
         .then((result) => {
-          this.init(result)
+          this.init(result.data)
         })
         .catch((err) => {
           if (err.response.status === 400) {
@@ -131,20 +131,6 @@ export const useMainStore = defineStore('main', () => {
     }
   }
 
-  class Document {
-    constructor(id, labels, type, urlPath, createdAt, assessors, valid, learnt, labeled) {
-      this.id = id
-      this.labels = labels
-      this.type = type
-      this.urlPath = urlPath
-      this.createdAt = createdAt
-      this.assessors = assessors
-      this.valid = valid
-      this.learnt = learnt
-      this.labeled = labeled
-    }
-  }
-
   class Model {
     constructor() {
       this.id = ''
@@ -158,16 +144,14 @@ export const useMainStore = defineStore('main', () => {
       this.userRole = ''
     }
 
-    init(payload) {
-      if (!payload.data) {
-        console.log('failed to init model: payload is empty')
+    init(data) {
+      if (!data) {
+        console.log('failed to init model: data is empty')
         return
       }
 
-      const data = payload.data
-
       if (data.userRole) {
-        this.role = data.userRole
+        this.userRole = data.userRole
       }
       if (data.id) {
         this.id = data.id
@@ -187,9 +171,52 @@ export const useMainStore = defineStore('main', () => {
       if (data.documents) {
         this.documents = data.documents
       }
+      if (data.document) {
+        this.documents = data.document
+      }
       if (data.participants) {
         this.participants = data.participants
       }
+    }
+
+    getPreviewURL() {
+      console.log(this)
+      if (!this.documents || this.documents.length === 0) {
+        throw new Error('failed to get preview: model documents are empty')
+      }
+
+      const template = this.documents.find((d) => {
+        return d.type === documentTypes.template
+      })
+
+      if (template) {
+        return template.id
+      }
+      throw new Error('model does not have a template document')
+    }
+
+    getUser(id) {
+      let needed = (id ? id : user.value.id)
+      console.log(needed)
+      console.log(this.participants)
+      this.participants.forEach((participant) => {
+        if (participant.id === needed) {
+          return participant
+        }
+      })
+      return undefined
+    }
+
+    async fetch(id) {
+      let requestedID = (id ? id : this.id)
+      await axios
+        .get('api/v1/project/' + requestedID, {
+          withCredentials: true
+        }).then((response) => {
+          this.init(response.data)
+        }).catch((err) => {
+          handleApiError(err)
+        })
     }
 
     async create() {
@@ -208,7 +235,7 @@ export const useMainStore = defineStore('main', () => {
           }
         )
 
-        this.id = response?.data?.id
+        this.init(response.data)
 
         // await addDocument(form.rawReferenceDocument)
         //
@@ -219,15 +246,153 @@ export const useMainStore = defineStore('main', () => {
         handleApiError(err)
       }
     }
+
+    async addDocuments(documents, type) {
+      if (!documents || documents.length === 0) {
+        return
+      }
+
+      const request = JSON.stringify({
+        type: type
+      })
+
+      const blob = new Blob([request], {
+        type: 'application/json'
+      })
+
+      const formData = new FormData()
+      for (let i in documents) {
+        formData.append('documents', documents[i])
+      }
+      formData.append('request', blob)
+
+
+      await axios.post(
+        'api/v1/project/' + this.id + ':upload-documents',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          withCredentials: true
+        }
+      ).then((response) => {
+        console.log(response)
+      }).catch((err) => {
+        handleApiError(err)
+      })
+    }
+
+    async delete() {
+      await axios
+        .delete('api/v1/project/' + this.id, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        })
+        .catch((err) => {
+          handleApiError(err)
+        })
+    }
+  }
+
+  class Document {
+    constructor() {
+      this.id = ''
+      this.labels = []
+      this.type = ''
+      this.urlPath = ''
+      this.createdAt = ''
+      this.assessors = []
+      this.isValid = false
+      this.isLearnt = false
+      this.isLabeled = false
+    }
+
+    init(data) {
+      if (!data) {
+        console.log('failed to init document: data is empty')
+        return
+      }
+
+      if (data.id) {
+        this.id = data.id
+      }
+      if (data.labels) {
+        this.labels = data.labels
+      }
+      if (data.type) {
+        this.type = data.type
+      }
+      if (data.urlPath) {
+        this.urlPath = data.urlPath
+      }
+      if (data.createdAt) {
+        this.createdAt = data.createdAt
+      }
+      if (data.assessors) {
+        this.assessors = data.assessors
+      }
+      if (data.isValid) {
+        this.isValid = data.isValid
+      }
+      if (data.isLearnt) {
+        this.isLearnt = data.isLearnt
+      }
+      if (data.labeled) {
+        this.isLabeled = data.isLabeled
+      }
+    }
+
+    async fetch(id) {
+      await axios
+        .get('api/v1/document/' + id, {
+          withCredentials: true
+        }).then((response) => {
+          this.init(response.data)
+        }).catch((err) => {
+          handleApiError(err)
+        })
+    }
+
+    async patch(data) {
+      axios
+        .patch('api/v1/document/' + this.id, {
+            isLabeled: this.isLabeled,
+            assessor: user.value.id,
+            labels: this.labels
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            withCredentials: true
+          })
+        .then((result) => {
+          this.init(result.data)
+        })
+        .catch((err) => {
+          if (err.message) {
+            console.log(err.message)
+          } else {
+            console.error(err)
+          }
+        })
+    }
   }
 
   const isFieldFocusRegistered = ref(false)
 
-  const user = ref(new User())
   const clients = ref([])
-  const users = ref([])
   const history = ref([])
+
+  const user = ref(new User())
+  const users = ref([])
   const models = ref([])
+  const model = ref(new Model())
+
+  const document = ref(new Document())
 
   function fetchSampleClients() {
     axios
@@ -280,25 +445,6 @@ export const useMainStore = defineStore('main', () => {
       })
   }
 
-  function fetchSampleModels() {
-    axios
-      .get(`data-sources/models.json?v=3`)
-      .then((result) => {
-        models.value = result?.data?.data
-      })
-      .catch((error) => {
-        if (error.response) {
-          console.log(error.response.data)
-          console.log(error.response.status)
-          console.log(error.response.headers)
-        } else if (error.request) {
-          console.log(error.request)
-        } else {
-          console.log('Error', error.message)
-        }
-      })
-  }
-
   async function fetchModels() {
     await axios
       .get('/api/v1/project?userId=' + user.value.id, {
@@ -329,10 +475,11 @@ export const useMainStore = defineStore('main', () => {
     users,
     history,
     models,
+    model,
+    document,
     fetchSampleClients,
     fetchUsers,
     fetchSampleHistory,
-    fetchSampleModels,
     fetchModels
   }
 })

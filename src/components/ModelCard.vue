@@ -5,10 +5,10 @@ import CardBoxModal from './CardBoxModal.vue'
 import CardBox from '@/components/CardBox.vue'
 import BaseButton from './BaseButton.vue'
 import ModelCardComponentTitle from './/ModelCardComponentTitle.vue'
-import axios from 'axios'
-import { SERVER_URL } from '@/globals.js'
 import { useRouter } from 'vue-router'
 import CardBoxWidget from '@/components/CardBoxWidget.vue'
+import BaseButtons from '@/components/BaseButtons.vue'
+import { userRoles } from '@/config'
 
 const router = useRouter()
 
@@ -57,27 +57,13 @@ const getTrendValue = (trend) => {
   return trend + '%'
 }
 
-const deleteModel = () => {
-  axios
-    .delete(SERVER_URL + '/v1/project/' + model.id, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    .then((result) => {
-      emit('update')
-    })
-    .catch((error) => {
-      if (error.response) {
-        console.log(error.response.data)
-        console.log(error.response.status)
-        console.log(error.response.headers)
-      } else if (error.request) {
-        console.log(error.request)
-      } else {
-        console.log('Error', error.message)
-      }
-    })
+const deleteModel = async () => {
+  try {
+    await props.model.delete()
+    emit('update')
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 const showDeleteModal = (e) => {
@@ -108,7 +94,7 @@ const toModel = () => {
     @click='toModel'
   >
     <ModelCardComponentTitle :title='model.name'>
-      <div class='grid grid-cols-2 gap-1'>
+      <BaseButtons v-if='model.userRole === userRoles.manager' no-wrap classAddon='-mt-3'>
         <BaseButton
           :icon='mdiChartBar'
           color='whiteDark'
@@ -120,7 +106,7 @@ const toModel = () => {
           rounded-full
           @click='showDeleteModal($event)'
         />
-      </div>
+      </BaseButtons>
     </ModelCardComponentTitle>
 
     <div class='space-y-3'>
@@ -149,7 +135,7 @@ const toModel = () => {
         :value='(100 * filledDocuments.number) / (allDocuments.number === 0 ? 1 : allDocuments.number)'
       />
 
-      <div class='relative w-full h-full overflow-hidden rounded-md'>
+      <div class='relative w-full max-h-[16vh] overflow-hidden rounded-md'>
         <img :src='model.previewURL' class='object-fill grayscale relative m-auto' />
       </div>
     </div>

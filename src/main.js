@@ -7,7 +7,7 @@ import { useMainStore } from '@/stores/main.js'
 
 import axios from 'axios'
 
-import { getCookie, isAuthorized } from '@/globals'
+import { getCookie, isAuthorized } from '@/misc'
 import { UnauthorizedError } from '@/errors'
 
 import './css/main.css'
@@ -35,7 +35,6 @@ const mainStore = useMainStore(pinia)
 // Fetch sample data
 mainStore.fetchSampleClients()
 mainStore.fetchSampleHistory()
-mainStore.fetchSampleModels()
 
 try {
   const uid = getCookie('id')

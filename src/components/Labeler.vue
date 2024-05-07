@@ -1,95 +1,79 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { fabric } from 'fabric'
-import { useRoute, useRouter } from 'vue-router'
-import { useMainStore } from '@/stores/main'
 import FormField from '@/components/FormField.vue'
 import FormControl from '@/components/FormControl.vue'
-import axios from 'axios'
-import { SERVER_URL } from '@/globals.js'
 import BaseButton from '@/components/BaseButton.vue'
+import { useMainStore } from '@/stores/main'
+import { useRoute } from 'vue-router'
 
 const mainStore = useMainStore()
-const router = useRouter()
 const route = useRoute()
 
-const getDocument = async () => {
-  try {
-    let response = await axios
-      .get(SERVER_URL + '/v1/document/' + route.params.id, {
-        headers: {
-          'Authorization': mainStore.user.token
-        }
-      })
+const labelsData = defineModel('labels', {
+  type: Object,
+  required: true
+})
 
-    let imageURL = response?.data?.urlPath
-    return imageURL
-  } catch (error) {
-    if (error.response) {
-      console.log(error.response.data)
-      console.log(error.response.status)
-      console.log(error.response.headers)
-    } else if (error.request) {
-      console.log(error.request)
-    } else {
-      console.log('Error', error.message)
-    }
-  }
-}
+const emit = defineEmits(['submit'])
+
+const container = ref(null)
+
+const labels = ref([])
+
+const labeler = ref(null)
+
+onMounted(async () => {
+  await mainStore.document.fetch(route.params.id)
+  const imageURL = mainStore.document.urlPath
+
+  labeler.value = new ImageLabeler(container.value)
+  labeler.value.loadImage(imageURL)
+  window.addEventListener('resize', labeler.value.resize())
+})
 
 const submit = () => {
-  let labelsData = []
+  const labelsList = []
   const image = labeler.value.image
 
   for (let i in labels.value) {
     const label = labels.value[i].canvasObject
-    labelsData.push({
+    labelsList.push({
       labelName: labels.value[i].name,
       x: label.left - image.left,
       y: label.top - image.top,
-      width: label.width / image.scaleX,
-      height: label.height / image.scaleY,
+      width: label.getScaledWidth() / image.scaleX,
+      height: label.getScaledHeight() / image.scaleY,
       rotate: label.angle
     })
   }
+  labelsData.value = labelsList
 
-  const formData = {
-    labels: labelsData,
-    isLabeled: true,
-    assessor: mainStore.user.email
-  }
-
-  axios
-    .patch(SERVER_URL + '/v1/document/' + route.params.id, formData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': mainStore.user.token
-      }
-    })
-    .then((result) => {
-      console.log(result)
-      router.push('/models')
-    })
-    .catch((error) => {
-      if (error.response) {
-        console.log(error.response.data)
-        console.log(error.response.status)
-        console.log(error.response.headers)
-      } else if (error.request) {
-        console.log(error.request)
-      } else {
-        console.log('Error', error.message)
-      }
-    })
+  emit('submit')
 }
 
-function normalizeNumber(val) {
+const labelCounter = reactive({
+  count: 0
+})
+
+const normalizeNumber = (val) => {
   return val === undefined ? 0 : val
 }
 
+const generateColor = () => {
+  const allowed = '0369cf'.split('')
+  let color = '#'
+  while (color.length < 4) {
+    color += allowed.splice(Math.floor((Math.random() * allowed.length)), 1)
+  }
+  return color
+}
+
 class ImageLabel {
-  constructor(rect, name, description) {
+  constructor(id, rect, color, name, description) {
+    this.id = id
     this.canvasObject = rect
+    this.color = color
     this.name = name
     this.description = description
   }
@@ -102,6 +86,7 @@ class ImageLabeler {
     const canvasElm = document.createElement('canvas')
     container.appendChild(canvasElm)
     this.canvas = new fabric.Canvas(canvasElm)
+    this.canvas.setBackgroundColor('rgb(219 234 254)')
     this.containerObserver = new ResizeObserver(this.resize.bind(this))
     this.containerObserver.observe(container)
     this.image = null
@@ -264,7 +249,7 @@ class ImageLabeler {
 
   addLabel(start, end) {
     const canvas = this.canvas
-    var zoom = canvas.getZoom()
+    const zoom = canvas.getZoom()
     const qr = fabric.util.qrDecompose(canvas.viewportTransform)
 
     start.x = (start.x - qr.translateX) / zoom
@@ -273,7 +258,12 @@ class ImageLabeler {
     end.x = (end.x - qr.translateX) / zoom
     end.y = (end.y - qr.translateY) / zoom
 
+    const color = generateColor()
+
+    const id = '' + labelCounter.count++
+
     const rect = new fabric.Rect({
+      id: id,
       left: Math.min(start.x, end.x),
       top: Math.min(start.y, end.y),
       originX: 'left',
@@ -281,24 +271,48 @@ class ImageLabeler {
       width: Math.abs(end.x - start.x),
       height: Math.abs(end.y - start.y),
       hasRotatingPoint: false,
-      stroke: 'red',
+      stroke: color,
       strokeWidth: 1,
-      fill: 'rgba(0,0,0,0.2)',
+      fill: 'rgba(0,0,0,0.3)',
       cornerSize: 6,
       cornerStyle: 'circle',
-      cornerColor: '#ff0000',
-      borderColor: '#ff0000',
+      cornerColor: color,
+      borderColor: color,
       transparentCorners: false,
       centeredScaling: false
+    })
+
+    const label = new ImageLabel(id, rect, color, '', '')
+    labels.value.push(label)
+
+    const text = new fabric.Text(id, {
+      left: rect.left + rect.getScaledWidth() / 2,
+      top: rect.top + rect.getScaledHeight() / 2,
+      fontSize: 18,
+      fill: color,
+      originX: 'center',
+      originY: 'center',
+      selectable: false
+    })
+
+    canvas.on('after:render', function() {
+      const coords = rect.getCoords(true)
+      text.set({
+        left: (Math.abs(coords[0].x + coords[1].x) + Math.abs(coords[2].x + coords[3].x)) / 4,
+        top: (Math.abs(coords[0].y + coords[1].y) + Math.abs(coords[2].y + coords[3].y)) / 4
+      })
     })
 
     rect.on('modified', () => {
       this.adjustRectSizePosition(rect)
     })
-    canvas.add(rect)
 
-    const label = new ImageLabel(rect, labels.value.length + '', '')
-    labels.value.push(label)
+    rect.on('removed', () => {
+      canvas.remove(text)
+    })
+
+    canvas.add(rect)
+    canvas.add(text)
 
     return label
   }
@@ -307,7 +321,9 @@ class ImageLabeler {
     if (!object) {
       return
     }
-    labels.value = labels.value.filter((lab) => lab.canvasObject === object)
+    labels.value = labels.value.filter((lab) => {
+      return lab.canvasObject.get('id') !== object.get('id')
+    })
     this.canvas.remove(object)
   }
 
@@ -397,39 +413,37 @@ class ImageLabeler {
     }
   }
 }
-
-const container = ref(null)
-
-const labels = ref([])
-
-const labeler = ref(null)
-
-onMounted(async () => {
-  const imageURL = await getDocument()
-
-  labeler.value = new ImageLabeler(container.value)
-  labeler.value.loadImage(imageURL)
-  window.addEventListener('resize', labeler.value.resize())
-})
 </script>
 
 <template>
-  <div class='flex flex-row max-h-modal h-full w-full justify-between'>
-    <div ref='container' class='basis-8/12 h-full w-full' />
-    <div class='basis-3/12 overflow-scroll relative max-h-modal flex flex-col gap-y-6'>
-      <div v-for='label in labels'>
-        <FormField label='Name' class='mb-[-0rem]'>
-          <FormControl v-model='label.name' />
-        </FormField>
-        <FormField label='Description'>
-          <FormControl v-model='label.description' />
-        </FormField>
+  <div class='max-h-modal h-full w-full justify-between'>
+    <div class='flex flex-row gap-3 h-full w-full'>
+      <div ref='container' class='basis-9/12 rounded-xl overflow-hidden border-blue-200 border-4' />
+
+      <div class='basis-3/12 flex flex-col justify-between pt-1 bg-blue-100 rounded-xl border-blue-200 border-4'>
+        <div class='overflow-y-scroll overflow relative max-h-modal flex flex-col gap-y-0'>
+          <h3 class='font-bold text-xl text-center'>Labels</h3>
+          <div v-for='label in labels' class='relative p-2 border-b-4 border-blue-200'>
+            <div class='absolute flex flex-row gap-1 h-4 right-2.5 top-3 leading-none'>
+              {{ label.id }}
+              <div
+                class='rounded-full w-4 h-4 border-[.01rem] border-black'
+                :style='"background-color: " + label.color'
+              />
+            </div>
+
+            <FormField label='Name' class='mb-[.5rem]'>
+              <FormControl v-model='label.name' />
+            </FormField>
+            <FormField label='Description'>
+              <FormControl v-model='label.description' />
+            </FormField>
+          </div>
+        </div>
+
+        <BaseButton type='submit' color='info' label='save' @click='submit' class='rounded-md m-1 z-10' />
       </div>
     </div>
-  </div>
-
-  <div>
-    <BaseButton type='submit' color='info' label='save' @click='submit' />
   </div>
 </template>
 

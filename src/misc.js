@@ -1,4 +1,4 @@
-const SERVER_URL = 'http://192.168.100.113:8080'
+import { templatePlaceholderURL } from '@/config'
 
 function isAuthorized(user) {
   return user.email.length > 0
@@ -40,10 +40,17 @@ function deleteCookie(name) {
   })
 }
 
+function getDocumentURL(document) {
+  if (!document || document?.name === 'placeholder') {
+    return templatePlaceholderURL
+  }
+  return URL.createObjectURL(document)
+}
+
 export {
-  SERVER_URL,
   isAuthorized,
   getCookie,
   setCookie,
-  deleteCookie
+  deleteCookie,
+  getDocumentURL
 }
