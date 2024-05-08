@@ -9,7 +9,8 @@ import AssessorList from '@/components/AssessorList.vue'
 import BaseDivider from '@/components/BaseDivider.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import BaseButton from '@/components/BaseButton.vue'
-import { mdiLabel } from '@mdi/js'
+import { mdiFileDocumentPlus, mdiLabel } from '@mdi/js'
+import SectionTitleLineWithButton from '@/components/SectionTitleLineWithButton.vue'
 
 const form = defineModel('form', {
   required: true,
@@ -42,6 +43,7 @@ const otherDocuments = computed(() => {
 
 <template>
   <CardBox form @submit.prevent='submit' class='text-nowrap'>
+    <SectionTitleLineWithButton :icon='mdiFileDocumentPlus' title='Model creation' main />
     <div class='grid grid-cols-2 gap-2 p-1'>
       <!-- row 1 -->
       <div class='relative basis-4/6'>

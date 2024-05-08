@@ -34,6 +34,14 @@ function setCookie(name, value, options = {}) {
   document.cookie = updatedCookie
 }
 
+const isPDF = (url) => {
+  if (!url) {
+    return false
+  }
+  const tokens = url.split('.')
+  return tokens[tokens.length - 1] === 'pdf'
+}
+
 function deleteCookie(name) {
   setCookie(name, '', {
     'max-age': -1
@@ -49,6 +57,7 @@ function getDocumentURL(document) {
 
 export {
   isAuthorized,
+  isPDF,
   getCookie,
   setCookie,
   deleteCookie,

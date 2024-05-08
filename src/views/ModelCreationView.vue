@@ -4,8 +4,6 @@ import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMainStore } from '@/stores/main'
-import { mdiFileDocumentPlus } from '@mdi/js'
-import SectionTitleLineWithButton from '@/components/SectionTitleLineWithButton.vue'
 import axios from 'axios'
 import { documentTypes, userRoles } from '@/config'
 import ModelForm from '@/components/ModelForm.vue'
@@ -86,7 +84,6 @@ const createModel = async () => {
 <template>
   <LayoutAuthenticated>
     <SectionMain>
-      <SectionTitleLineWithButton :icon='mdiFileDocumentPlus' title='Model creation' main />
       <ModelForm v-model:form='form' @submit='createModel' />
     </SectionMain>
   </LayoutAuthenticated>

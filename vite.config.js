@@ -8,6 +8,9 @@ export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
   switch (command) {
     case 'build':
       return {
+        optimizeDeps: {
+          exclude: ['pdfjs-dist']
+        },
         base: '/',
         plugins: [vue()],
         resolve: {
@@ -18,6 +21,9 @@ export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
       }
     case 'serve':
       return {
+        optimizeDeps: {
+          exclude: ['pdfjs-dist']
+        },
         base: '/',
         plugins: [vue()],
         resolve: {

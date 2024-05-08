@@ -6,6 +6,7 @@ import FormControl from '@/components/FormControl.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import { useMainStore } from '@/stores/main'
 import { useRoute } from 'vue-router'
+import { mdiTrashCanOutline } from '@mdi/js'
 
 const mainStore = useMainStore()
 const route = useRoute()
@@ -17,33 +18,68 @@ const labelsData = defineModel('labels', {
 
 const emit = defineEmits(['submit'])
 
-const container = ref(null)
+const container = ref({})
 
 const labels = ref([])
 
-const labeler = ref(null)
+const labeler = ref({})
 
 onMounted(async () => {
   await mainStore.document.fetch(route.params.id)
   const imageURL = mainStore.document.urlPath
 
   labeler.value = new ImageLabeler(container.value)
-  labeler.value.loadImage(imageURL)
+  await labeler.value.loadImage(imageURL)
+
+  // if (isPDF(imageURL)) {
+  //   pdfjslib.GlobalWorkerOptions.workerSrc = `../../pdfjs-dist/build/pdf.worker.mjs`
+  //   await pdfjslib.getDocument(imageURL).promise.then(function(pdf) {
+  //
+  //     //How many pages it has
+  //     const numPages = pdf.numPages
+  //
+  //     for (let i = 0; i < numPages; i++) {
+  //       pdf.getPage(1).then(handlePages)
+  //     }
+  //   })
+  // }
   window.addEventListener('resize', labeler.value.resize())
 })
+
+function handlePages(page) {
+  //This gives us the page's dimensions at full scale
+  const viewport = page.getViewport(1)
+
+  //We'll create a canvas for each page to draw it on
+  const canvas = document.createElement('canvas')
+  canvas.style.display = 'block'
+  const context = canvas.getContext('2d')
+  canvas.height = viewport.height
+  canvas.width = viewport.width
+
+  //Draw it on the canvas
+  page.render({ canvasContext: context, viewport: viewport })
+
+  //Add it to the web page
+  document.body.appendChild(canvas)
+}
 
 const submit = () => {
   const labelsList = []
   const image = labeler.value.image
+  const scaleX = image.scaleX
+  const scaleY = image.scaleY
 
   for (let i in labels.value) {
     const label = labels.value[i].canvasObject
+
+    label.getPointByOrigin('left', 'top')
     labelsList.push({
-      labelName: labels.value[i].name,
-      x: label.left - image.left,
-      y: label.top - image.top,
-      width: label.getScaledWidth() / image.scaleX,
-      height: label.getScaledHeight() / image.scaleY,
+      labelName: labels.value[i].labelName,
+      x: (label.left - image.left) / scaleX,
+      y: (label.top - image.top) / scaleY,
+      width: label.width / image.scaleX,
+      height: label.height / image.scaleY,
       rotate: label.angle
     })
   }
@@ -70,11 +106,11 @@ const generateColor = () => {
 }
 
 class ImageLabel {
-  constructor(id, rect, color, name, description) {
+  constructor(id, rect, color, labelName, description) {
     this.id = id
     this.canvasObject = rect
     this.color = color
-    this.name = name
+    this.labelName = labelName
     this.description = description
   }
 }
@@ -136,7 +172,6 @@ class ImageLabeler {
       this.image = img
       this.image.set('selectable', false)
       this.image.set('evented', false)
-      this.canvas.add(this.image)
       const maxSize = this.getContainerInnerSize()
       const imageScale = this.getScaleImageInfo(
         normalizeNumber(this.image.width),
@@ -148,8 +183,28 @@ class ImageLabeler {
         scaleX: imageScale,
         scaleY: imageScale
       })
+      this.canvas.add(this.image)
 
       this.drawImage()
+      this.drawLabels()
+    })
+  }
+
+  drawLabels() {
+    const image = this.image
+    const scaleX = this.image.scaleX
+    const scaleY = this.image.scaleY
+    mainStore.document.labels.forEach((label) => {
+      const start = {
+        x: image.left + label.x * scaleX,
+        y: image.top + label.y * scaleY
+      }
+      const end = {
+        x: image.left + (label.x + label.width) * scaleX,
+        y: image.top + (label.y + label.height) * scaleY
+      }
+
+      this.addLabel(start, end, label.rotate, label.labelName)
     })
   }
 
@@ -210,10 +265,7 @@ class ImageLabeler {
         return
       }
 
-      if (
-        Math.abs(this.mouseStart.x - mouseEnd.x) * Math.abs(this.mouseStart.y - mouseEnd.y) <
-        100
-      ) {
+      if (Math.abs(this.mouseStart.x - mouseEnd.x) * Math.abs(this.mouseStart.y - mouseEnd.y) < 100) {
         return
       }
 
@@ -223,8 +275,8 @@ class ImageLabeler {
     })
 
     canvas.on('mouse:wheel', function(event) {
-      var delta = event.e.deltaY
-      var zoom = canvas.getZoom()
+      const delta = event.e.deltaY
+      let zoom = canvas.getZoom()
       zoom *= 0.999 ** delta
       if (zoom > 20) zoom = 20
       if (zoom < 0.1) zoom = 0.1
@@ -235,8 +287,8 @@ class ImageLabeler {
 
     canvas.on('mouse:move', (opt) => {
       if (this.isDragging) {
-        var e = opt.e
-        var vpt = canvas.viewportTransform
+        const e = opt.e
+        const vpt = canvas.viewportTransform
         vpt[4] += e.clientX - this.lastPosX
         vpt[5] += e.clientY - this.lastPosY
         canvas.setViewportTransform(vpt)
@@ -247,7 +299,7 @@ class ImageLabeler {
     })
   }
 
-  addLabel(start, end) {
+  addLabel(start, end, rotate = 0, labelName = '') {
     const canvas = this.canvas
     const zoom = canvas.getZoom()
     const qr = fabric.util.qrDecompose(canvas.viewportTransform)
@@ -264,30 +316,33 @@ class ImageLabeler {
 
     const rect = new fabric.Rect({
       id: id,
+      originY: 'top',
+      originX: 'left',
       left: Math.min(start.x, end.x),
       top: Math.min(start.y, end.y),
-      originX: 'left',
-      originY: 'top',
+      angle: rotate,
       width: Math.abs(end.x - start.x),
       height: Math.abs(end.y - start.y),
-      hasRotatingPoint: false,
       stroke: color,
-      strokeWidth: 1,
+      strokeWidth: 2,
       fill: 'rgba(0,0,0,0.3)',
-      cornerSize: 6,
-      cornerStyle: 'circle',
+      cornerSize: 10,
+      // cornerStyle: 'circle',
       cornerColor: color,
       borderColor: color,
       transparentCorners: false,
-      centeredScaling: false
+      centeredScaling: false,
+      rx: 3,
+      ry: 3
     })
 
-    const label = new ImageLabel(id, rect, color, '', '')
+    const label = new ImageLabel(id, rect, color, labelName, '')
     labels.value.push(label)
 
+    const coords = rect.getCoords(true)
     const text = new fabric.Text(id, {
-      left: rect.left + rect.getScaledWidth() / 2,
-      top: rect.top + rect.getScaledHeight() / 2,
+      left: (Math.abs(coords[0].x + coords[1].x) + Math.abs(coords[2].x + coords[3].x)) / 4,
+      top: (Math.abs(coords[0].y + coords[1].y) + Math.abs(coords[2].y + coords[3].y)) / 4,
       fontSize: 18,
       fill: color,
       originX: 'center',
@@ -430,10 +485,15 @@ class ImageLabeler {
                 class='rounded-full w-4 h-4 border-[.01rem] border-black'
                 :style='"background-color: " + label.color'
               />
+              <BaseButton
+                :icon='mdiTrashCanOutline' class='size-4 cursor-pointer' as='div' color='danger' icon-size='.8rem'
+                border='border-4 border-blue-200'
+                small rounded-full
+              />
             </div>
 
             <FormField label='Name' class='mb-[.5rem]'>
-              <FormControl v-model='label.name' />
+              <FormControl v-model='label.labelName' />
             </FormField>
             <FormField label='Description'>
               <FormControl v-model='label.description' />
