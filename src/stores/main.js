@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { deleteCookie, setCookie } from '@/misc'
 import { handleApiError } from '@/errors'
-import { documentTypes } from '@/config'
+import { documentTypes, userRoles } from '@/config'
 
 export const useMainStore = defineStore('main', () => {
   class User {
@@ -247,6 +247,36 @@ export const useMainStore = defineStore('main', () => {
       }
     }
 
+    async patch(data) {
+      const participants = data.participants.map((user) => {
+        return {
+          userId: user.id,
+          role: userRoles.assessor
+        }
+      })
+
+      if (participants.length > 0) {
+        await axios.patch(
+          'api/v1/project/' + this.id,
+          {
+            participants: participants
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            withCredentials: true
+          }
+        ).then((response) => {
+          console.log(response)
+        }).catch((err) => {
+          handleApiError(err)
+        })
+      }
+
+      await this.fetch()
+    }
+
     async addDocuments(documents, type) {
       if (!documents || documents.length === 0) {
         return
@@ -310,11 +340,25 @@ export const useMainStore = defineStore('main', () => {
       this.isLabeled = false
     }
 
+    reset() {
+      this.id = ''
+      this.labels = []
+      this.type = ''
+      this.urlPath = ''
+      this.createdAt = ''
+      this.assessors = []
+      this.isValid = false
+      this.isLearnt = false
+      this.isLabeled = false
+    }
+
     init(data) {
       if (!data) {
         console.log('failed to init document: data is empty')
         return
       }
+
+      this.reset()
 
       if (data.id) {
         this.id = data.id
@@ -356,7 +400,7 @@ export const useMainStore = defineStore('main', () => {
         })
     }
 
-    async patch(data) {
+    async patch() {
       axios
         .patch('api/v1/document/' + this.id, {
             isLabeled: this.isLabeled,

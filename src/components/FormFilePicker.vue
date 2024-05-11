@@ -56,63 +56,36 @@ const upload = (event) => {
   }
 
   emit('update:modelValue', file.value)
-
-  // Use this as an example for handling file uploads
-  // let formData = new FormData()
-  // formData.append('file', file.value)
-
-  // const mediaStoreRoute = `/your-route/`
-
-  // axios
-  //   .post(mediaStoreRoute, formData, {
-  //     headers: {
-  //       'Content-Type': 'multipart/form-data'
-  //     },
-  //     onUploadProgress: progressEvent
-  //   })
-  //   .then(r => {
-  //
-  //   })
-  //   .catch(err => {
-  //
-  //   })
 }
 
-// const uploadPercent = ref(0)
-//
-// const progressEvent = progressEvent => {
-//   uploadPercent.value = Math.round(
-//     (progressEvent.loaded * 100) / progressEvent.total
-//   )
-// }
 </script>
 
 <template>
-  <div class="flex items-stretch justify-start">
-    <label class="inline-flex">
+  <div class='flex items-stretch justify-start'>
+    <label class='inline-flex'>
       <BaseButton
-        as="a"
-        :class="{ 'w-12 h-12': isRoundIcon, 'rounded-r-none': showFilename }"
-        :icon-size="isRoundIcon ? 24 : undefined"
-        :label="isRoundIcon ? null : label"
-        :icon="icon"
-        :color="color"
-        :rounded-full="isRoundIcon"
+        as='a'
+        :class="{ 'w-9 h-9': isRoundIcon, 'rounded-r-none': showFilename }"
+        :icon-size='isRoundIcon ? 24 : undefined'
+        :label='isRoundIcon ? null : label'
+        :icon='icon'
+        :color='color'
+        :rounded-full='isRoundIcon'
       />
       <input
-        ref="root"
-        type="file"
-        class="absolute top-0 left-0 w-full h-full opacity-0 outline-none cursor-pointer -z-1"
-        :accept="accept"
-        :multiple="isMultiple"
-        @input="upload"
+        ref='root'
+        type='file'
+        class='absolute top-0 left-0 w-full h-full opacity-0 outline-none cursor-pointer -z-1'
+        :accept='accept'
+        :multiple='isMultiple'
+        @input='upload'
       />
     </label>
     <div
-      v-if="showFilename"
-      class="px-4 py-2 bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700 border rounded-r"
+      v-if='showFilename'
+      class='px-4 py-2 bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700 border rounded-r'
     >
-      <span class="text-ellipsis line-clamp-1">
+      <span class='text-ellipsis line-clamp-1'>
         {{ file.name }}
       </span>
     </div>

@@ -9,6 +9,10 @@ defineProps({
   disabled: {
     type: Boolean,
     default: false
+  },
+  dataLabel: {
+    type: String,
+    default: 'HHEHEHE'
   }
 })
 
@@ -22,7 +26,7 @@ watch(checked, (newVal) => {
 </script>
 
 <template>
-  <component :is='type' class='lg:w-1'>
+  <component :is='type' class='lg:w-1' :data-label='dataLabel'>
     <label class='checkbox'>
       <input v-model='checked' type='checkbox' :disabled='disabled' />
       <span class='check' :class='disabled ? "cursor-default" : "cursor-pointer"' />

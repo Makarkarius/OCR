@@ -21,7 +21,6 @@ const patchDocument = async () => {
 
   try {
     await mainStore.document.patch()
-    console.log(mainStore.model)
     await router.push('/models/' + mainStore.model.id)
   } catch (err) {
     if (err.message) {

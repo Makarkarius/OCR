@@ -1,6 +1,7 @@
 const containerMaxW = 'xl:max-w-8xl xl:mx-auto'
 
 const SERVER_URL = 'http://192.168.100.113:8080'
+const DEV_SERVER_URL = 'http://158.160.143.123:8080'
 
 const userRoles = {
   assessor: 'ROLE_ASSESSOR',
@@ -17,7 +18,9 @@ const templatePlaceholderURL = 'https://gas-kvas.com/uploads/posts/2023-02/16762
 
 export {
   containerMaxW,
+
   SERVER_URL,
+  DEV_SERVER_URL,
 
   userRoles,
   documentTypes,

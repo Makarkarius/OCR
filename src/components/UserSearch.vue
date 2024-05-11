@@ -1,6 +1,5 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useMainStore } from '@/stores/main'
 import CardBox from '@/components/CardBox.vue'
 import TableCheckboxCell from '@/components/TableCheckboxCell.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
@@ -8,31 +7,34 @@ import BaseButton from '@/components/BaseButton.vue'
 import OverlayLayer from '@/components/OverlayLayer.vue'
 import FormField from '@/components/FormField.vue'
 import FormControl from '@/components/FormControl.vue'
+import { damerauLevenshtein } from '@/misc'
 
-const mainStore = useMainStore()
-
-onMounted(async () => {
-  window.addEventListener('keydown', keyHandler)
-  await mainStore.fetchUsers()
-  assessors.value = users.value
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', keyHandler)
+const allUsers = defineModel('allUsers', {
+  type: Array,
+  required: true
 })
 
 const selectedUsers = defineModel('selectedUsers', {
-  type: Array
+  type: Array,
+  required: true
 })
 
 const isVisible = defineModel('isVisible', {
   type: Boolean
 })
 
-const emit = defineEmits(['update:modelValue', 'close'])
+const emit = defineEmits(['update:modelValue'])
+
+onMounted(async () => {
+  window.addEventListener('keydown', keyHandler)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', keyHandler)
+})
 
 const confirm = () => {
-  selectedUsers.value = checkedRows.value
+  // selectedUsers.value = checkedRows.value
   close()
 }
 
@@ -42,49 +44,56 @@ const cancel = () => {
 
 const close = () => {
   isVisible.value = false
-  emit('close')
 }
 
-const users = computed(() => {
-  return mainStore.users.map((user) => {
-    user.checked = false
-    return user
-  })
+const users = computed({
+  get: () => {
+    let result = allUsers.value.map((user) => {
+      const found = selectedUsers.value.find((selectedUser) => {
+        return selectedUser.id === user.id
+      })
+      user.checked = !!found
+      user.filtered = false
+      return user
+    })
+    result = result.sort((a, b) => {
+      if (a.surname !== b.surname) {
+        return a.surname > b.surname ? 1 : -1
+      }
+      return 0
+    })
+    return result
+  },
+  set: () => {
+  }
 })
 
-let assessors = ref([])
-
-const checkedRows = ref([])
-
-const remove = (arr, cb) => {
-  const newArr = []
-
-  arr.forEach((item) => {
-    if (!cb(item)) {
-      newArr.push(item)
-    }
-  })
-
-  return newArr
-}
-
-const checked = (isChecked, assessor) => {
+const check = (isChecked, user) => {
   if (isChecked) {
-    checkedRows.value.push(assessor)
+    selectedUsers.value.push(user)
   } else {
-    checkedRows.value = remove(checkedRows.value, (row) => row.id === assessor.id)
+    selectedUsers.value = selectedUsers.value.filter((selectedUser) => {
+      return selectedUser.id !== user.id
+    })
   }
 }
 
 const searchText = ref('')
 
-const search = (event) => {
-  console.log(assessors)
-  let normalized = event.toLowerCase()
+const search = () => {
+  const normalizedSearch = searchText.value.toLowerCase()
 
-  assessors.value = users.value.filter(client => {
-    const name = client.name.toLowerCase()
-    return name.includes(normalized)
+  users.value.map(user => {
+    const name = user.name.toLowerCase()
+    const surname = user.surname.toLowerCase()
+
+    const searchCoef = 30
+    const nameDist = damerauLevenshtein(name, normalizedSearch) / (1 + normalizedSearch.length / searchCoef)
+    const surnameDist = damerauLevenshtein(surname, normalizedSearch) / (1 + normalizedSearch.length / searchCoef)
+
+    user.filtered =
+      nameDist > name.length &&
+      surnameDist > surname.length
   })
 }
 
@@ -99,7 +108,7 @@ const keyHandler = (e) => {
 <template>
   <OverlayLayer v-show='isVisible' @overlay-click='cancel'>
     <CardBox
-      class='shadow-lg h-modal w-8/12 md:w-1/2 lg:w-5/12 z-50'
+      class='shadow-lg h-modal max-w-[90vw] z-50'
       is-modal
       :has-component-layout='false'
       :has-table='true'
@@ -113,17 +122,19 @@ const keyHandler = (e) => {
       <div class='overflow-scroll relative min-h-[50h] max-h-[50vh]'>
         <table>
           <tbody>
-          <tr v-for='client in assessors' :key='client.id'>
-            <TableCheckboxCell v-model='client.checked' @checked='checked($event, client)' />
+          <tr v-for='user in users' :key='user.id'>
+            <!--            <div v-if='!user.filtered'>-->
+            <TableCheckboxCell v-model='user.checked' @checked='check($event, user)' />
             <td data-label='Name'>
-              {{ client.surname + ' ' + client.name }}
+              {{ user.surname + ' ' + user.name }}
             </td>
             <td data-label='Login'>
-              {{ client.email }}
+              {{ user.email }}
             </td>
-            <td data-label='ID'>
-              {{ client.id }}
-            </td>
+            <!--            <td data-label='ID'>-->
+            <!--              {{ user.id }}-->
+            <!--            </td>-->
+            <!--            </div>-->
           </tr>
           </tbody>
         </table>
@@ -137,3 +148,9 @@ const keyHandler = (e) => {
     </CardBox>
   </OverlayLayer>
 </template>
+
+<style scoped>
+td {
+  @apply text-wrap
+}
+</style>

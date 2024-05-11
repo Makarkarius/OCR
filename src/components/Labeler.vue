@@ -112,6 +112,7 @@ class ImageLabel {
     this.color = color
     this.labelName = labelName
     this.description = description
+    this.type = 'String'
   }
 }
 
@@ -223,13 +224,15 @@ class ImageLabeler {
           canvas.fire('custom:keydom', e)
           return
         case ' ':
+          this.isDragging = true
           // console.log("space");
           return
       }
     })
 
     canvas.on('mouse:down', (event) => {
-      if (event.e.altKey === true) {
+      console.log(event.e)
+      if (event.e.altKey === true || this.isDragging) {
         this.isDragging = true
         canvas.selection = false
         this.lastPosX = event.e.clientX
@@ -479,24 +482,24 @@ class ImageLabeler {
         <div class='overflow-y-scroll overflow relative max-h-modal flex flex-col gap-y-0'>
           <h3 class='font-bold text-xl text-center'>Labels</h3>
           <div v-for='label in labels' class='relative p-2 border-b-4 border-blue-200'>
-            <div class='absolute flex flex-row gap-1 h-4 right-2.5 top-3 leading-none'>
-              {{ label.id }}
+            <div class='flex flex-row-reverse gap-1 h-4 w-full my-1 leading-none'>
+              <BaseButton
+                :icon='mdiTrashCanOutline' class='size-4 cursor-pointer' as='div' color='danger' icon-size='.8rem'
+                border='border-4 border-blue-200' small rounded-full
+                @click='label.delete()'
+              />
               <div
                 class='rounded-full w-4 h-4 border-[.01rem] border-black'
                 :style='"background-color: " + label.color'
               />
-              <BaseButton
-                :icon='mdiTrashCanOutline' class='size-4 cursor-pointer' as='div' color='danger' icon-size='.8rem'
-                border='border-4 border-blue-200'
-                small rounded-full
-              />
+              {{ label.id }}
             </div>
 
-            <FormField label='Name' class='mb-[.5rem]'>
-              <FormControl v-model='label.labelName' />
-            </FormField>
-            <FormField label='Description'>
-              <FormControl v-model='label.description' />
+            <FormField class='mb-[.5rem]'>
+              <FormControl v-model='label.labelName' placeholder='Name' />
+              <FormControl v-model='label.description' placeholder='Description' />
+              <FormControl v-model='label.type' placeholder='Type' type='select'
+                           :options='["String", "Number", "Date"]' />
             </FormField>
           </div>
         </div>
