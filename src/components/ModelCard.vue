@@ -9,6 +9,7 @@ import { useRouter } from 'vue-router'
 import CardBoxWidget from '@/components/CardBoxWidget.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import { userRoles } from '@/config'
+import PillTag from '@/components/PillTag.vue'
 
 const router = useRouter()
 
@@ -85,8 +86,7 @@ const toModel = () => {
     :hasCancel='true'
     :title='`Are you sure you want to delete ` + model.name + ` model?`'
     @confirm='deleteModel'
-  >
-  </CardBoxModal>
+  />
 
   <CardBox
     class='overflow-hidden shadow-md p-4 hover:scale-105 transition-scale duration-500 cursor-pointer'
@@ -117,26 +117,33 @@ const toModel = () => {
           :trend='getTrendValue(allDocuments.trend)'
           :trend-type='getTrendType(allDocuments.trend)'
           color='text-emerald-500'
-          :number='allDocuments.number'
-          label='Documents'
+          :number='model.datasetDocuments'
+          label='Dataset'
         />
         <CardBoxWidget
           :trend='getTrendValue(filledDocuments.trend)'
           :trend-type='getTrendType(filledDocuments.trend)'
           color='text-emerald-500'
-          :number='filledDocuments.number'
-          label='Filled'
+          :number='model.labeledDocuments'
+          label='Labeled'
         />
       </div>
 
       <progress
         class='flex self-center w-full'
         max='100'
-        :value='(100 * filledDocuments.number) / (allDocuments.number === 0 ? 1 : allDocuments.number)'
+        :value='(100 * model.labeledDocuments) / (model.datasetDocuments === 0 ? 1 : model.datasetDocuments)'
       />
 
       <div class='relative w-full max-h-[16vh] overflow-hidden rounded-md'>
-        <img :src='model.previewURL' class='object-fill grayscale relative m-auto' />
+        <PillTag
+          v-if='!model.isTemplateLabeled'
+          class='absolute right-1.5 top-1.5 z-10'
+          color='danger'
+          label='No labels'
+          small
+        />
+        <img :src='model.previewURL' class='object-fill grayscale relative m-auto' alt='Model template document' />
       </div>
     </div>
 

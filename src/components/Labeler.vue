@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { fabric } from 'fabric'
 import FormField from '@/components/FormField.vue'
 import FormControl from '@/components/FormControl.vue'
@@ -7,6 +7,7 @@ import BaseButton from '@/components/BaseButton.vue'
 import { useMainStore } from '@/stores/main'
 import { useRoute } from 'vue-router'
 import { mdiTrashCanOutline } from '@mdi/js'
+import { documentTypes } from '@/config'
 
 const mainStore = useMainStore()
 const route = useRoute()
@@ -24,45 +25,29 @@ const labels = ref([])
 
 const labeler = ref({})
 
+const isTemplate = computed(() => {
+  return mainStore.document.type === documentTypes.template
+})
+
+const templateLabelsNames = computed(() => {
+  return mainStore.document.templateLabels.map((label) => {
+    return label.labelName
+  })
+})
+
 onMounted(async () => {
   await mainStore.document.fetch(route.params.id)
   const imageURL = mainStore.document.urlPath
 
-  labeler.value = new ImageLabeler(container.value)
+  labeler.value = new Labeler(container.value)
   await labeler.value.loadImage(imageURL)
 
-  // if (isPDF(imageURL)) {
-  //   pdfjslib.GlobalWorkerOptions.workerSrc = `../../pdfjs-dist/build/pdf.worker.mjs`
-  //   await pdfjslib.getDocument(imageURL).promise.then(function(pdf) {
-  //
-  //     //How many pages it has
-  //     const numPages = pdf.numPages
-  //
-  //     for (let i = 0; i < numPages; i++) {
-  //       pdf.getPage(1).then(handlePages)
-  //     }
-  //   })
-  // }
   window.addEventListener('resize', labeler.value.resize())
 })
 
-function handlePages(page) {
-  //This gives us the page's dimensions at full scale
-  const viewport = page.getViewport(1)
-
-  //We'll create a canvas for each page to draw it on
-  const canvas = document.createElement('canvas')
-  canvas.style.display = 'block'
-  const context = canvas.getContext('2d')
-  canvas.height = viewport.height
-  canvas.width = viewport.width
-
-  //Draw it on the canvas
-  page.render({ canvasContext: context, viewport: viewport })
-
-  //Add it to the web page
-  document.body.appendChild(canvas)
-}
+onUnmounted(async () => {
+  window.removeEventListener('resize', labeler.value.resize())
+})
 
 const submit = () => {
   const labelsList = []
@@ -71,7 +56,7 @@ const submit = () => {
   const scaleY = image.scaleY
 
   for (let i in labels.value) {
-    const label = labels.value[i].canvasObject
+    const label = labels.value[i].canvasRect
 
     label.getPointByOrigin('left', 'top')
     labelsList.push({
@@ -105,18 +90,22 @@ const generateColor = () => {
   return color
 }
 
-class ImageLabel {
-  constructor(id, rect, color, labelName, description) {
+class Label {
+  constructor(id, rect, text, color, labelName, description) {
     this.id = id
-    this.canvasObject = rect
+    this.canvasRect = rect
+    this.canvasText = text
     this.color = color
+
     this.labelName = labelName
     this.description = description
     this.type = 'String'
+
+    this.variant = ''
   }
 }
 
-class ImageLabeler {
+class Labeler {
   constructor(container) {
     if (!container) throw 'err'
     this.container = container
@@ -153,7 +142,7 @@ class ImageLabeler {
     const topOffset = image.top - prevTop
 
     labels.value.forEach((label) => {
-      const labelObj = label.canvasObject
+      const labelObj = label.canvasRect
       labelObj.set({
         left: labelObj.left + leftOffset,
         top: labelObj.top + topOffset
@@ -231,7 +220,6 @@ class ImageLabeler {
     })
 
     canvas.on('mouse:down', (event) => {
-      console.log(event.e)
       if (event.e.altKey === true || this.isDragging) {
         this.isDragging = true
         canvas.selection = false
@@ -243,7 +231,7 @@ class ImageLabeler {
       if (!event.target) {
         this.mouseStart = new fabric.Point(event.e.layerX, event.e.layerY)
         // disable all labels selection
-        labels.value.forEach((label) => (label.canvasObject.selectable = false))
+        labels.value.forEach((label) => (label.canvasRect.selectable = false))
       } else {
         this.mouseStart = null
       }
@@ -257,7 +245,7 @@ class ImageLabeler {
       }
 
       // enable all labels selection
-      labels.value.forEach((label) => (label.canvasObject.selectable = true))
+      labels.value.forEach((label) => (label.canvasRect.selectable = true))
 
       if (!this.mouseStart) {
         return
@@ -274,7 +262,7 @@ class ImageLabeler {
 
       const label = this.addLabel(this.mouseStart, mouseEnd)
 
-      canvas.setActiveObject(label.canvasObject)
+      canvas.setActiveObject(label.canvasRect)
     })
 
     canvas.on('mouse:wheel', function(event) {
@@ -339,9 +327,6 @@ class ImageLabeler {
       ry: 3
     })
 
-    const label = new ImageLabel(id, rect, color, labelName, '')
-    labels.value.push(label)
-
     const coords = rect.getCoords(true)
     const text = new fabric.Text(id, {
       left: (Math.abs(coords[0].x + coords[1].x) + Math.abs(coords[2].x + coords[3].x)) / 4,
@@ -352,6 +337,9 @@ class ImageLabeler {
       originY: 'center',
       selectable: false
     })
+
+    const label = new Label(id, rect, text, color, labelName, '')
+    labels.value.push(label)
 
     canvas.on('after:render', function() {
       const coords = rect.getCoords(true)
@@ -375,26 +363,28 @@ class ImageLabeler {
     return label
   }
 
-  removeLabel(object) {
-    if (!object) {
+  removeLabel(rect) {
+    if (!rect) {
       return
     }
-    labels.value = labels.value.filter((lab) => {
-      return lab.canvasObject.get('id') !== object.get('id')
+    labels.value = labels.value.filter((label) => {
+      return label.canvasRect.get('id') !== rect.get('id')
     })
-    this.canvas.remove(object)
+    this.canvas.remove(rect)
   }
 
   adjustRectSizePosition(rect) {
     const minSize = 25
+
     let width = normalizeNumber(rect.width) * normalizeNumber(rect.scaleX)
     let height = normalizeNumber(rect.height) * normalizeNumber(rect.scaleY)
     let left = normalizeNumber(rect.left)
     let top = normalizeNumber(rect.top)
+
     const canvas = this.canvas
     const canvasWidth = normalizeNumber(canvas.width)
     const canvasHeight = normalizeNumber(canvas.height)
-    // start x is out of right edge
+
     if (left >= canvasWidth - minSize) {
       left = canvasWidth - minSize
     }
@@ -442,26 +432,27 @@ class ImageLabeler {
   getScaleImageInfo(imgWidth, imgHeight, maxWidth, maxHeight) {
     const wRatio = maxWidth / imgWidth
     const hRatio = maxHeight / imgHeight
-    let scale = 1
-    if (imgWidth > maxWidth && wRatio < hRatio) {
-      scale = wRatio
-    } else if (imgHeight > maxHeight && hRatio < wRatio) {
-      scale = hRatio
-    } else {
-      scale = Math.min(wRatio, hRatio)
-    }
 
-    return scale
+    if (imgWidth > maxWidth && wRatio < hRatio) {
+      return wRatio
+    }
+    if (imgHeight > maxHeight && hRatio < wRatio) {
+      return hRatio
+    }
+    return Math.min(wRatio, hRatio)
   }
 
   getContainerInnerSize() {
-    const el = this.container
-    let height = el.clientHeight
-    let width = el.clientWidth
-    const paddingLeft = window.getComputedStyle(el, null).getPropertyValue('padding-left')
-    const paddingRight = window.getComputedStyle(el, null).getPropertyValue('padding-right')
-    const paddingTop = window.getComputedStyle(el, null).getPropertyValue('padding-top')
-    const paddingBottom = window.getComputedStyle(el, null).getPropertyValue('padding-bottom')
+    const container = this.container
+
+    let height = container.clientHeight
+    let width = container.clientWidth
+
+    const paddingLeft = window.getComputedStyle(container, null).getPropertyValue('padding-left')
+    const paddingRight = window.getComputedStyle(container, null).getPropertyValue('padding-right')
+    const paddingTop = window.getComputedStyle(container, null).getPropertyValue('padding-top')
+    const paddingBottom = window.getComputedStyle(container, null).getPropertyValue('padding-bottom')
+
     width = width - parseFloat(paddingLeft) - parseFloat(paddingRight)
     height = height - parseFloat(paddingTop) - parseFloat(paddingBottom)
 
@@ -471,6 +462,7 @@ class ImageLabeler {
     }
   }
 }
+
 </script>
 
 <template>
@@ -482,11 +474,12 @@ class ImageLabeler {
         <div class='overflow-y-scroll overflow relative max-h-modal flex flex-col gap-y-0'>
           <h3 class='font-bold text-xl text-center'>Labels</h3>
           <div v-for='label in labels' class='relative p-2 border-b-4 border-blue-200'>
+
             <div class='flex flex-row-reverse gap-1 h-4 w-full my-1 leading-none'>
               <BaseButton
                 :icon='mdiTrashCanOutline' class='size-4 cursor-pointer' as='div' color='danger' icon-size='.8rem'
                 border='border-4 border-blue-200' small rounded-full
-                @click='label.delete()'
+                @click='labeler.removeLabel(label.canvasRect)'
               />
               <div
                 class='rounded-full w-4 h-4 border-[.01rem] border-black'
@@ -495,12 +488,26 @@ class ImageLabeler {
               {{ label.id }}
             </div>
 
-            <FormField class='mb-[.5rem]'>
-              <FormControl v-model='label.labelName' placeholder='Name' />
-              <FormControl v-model='label.description' placeholder='Description' />
-              <FormControl v-model='label.type' placeholder='Type' type='select'
-                           :options='["String", "Number", "Date"]' />
-            </FormField>
+            <template v-if='isTemplate'>
+              <FormField class='mb-[.5rem]'>
+                <FormControl v-model='label.labelName' placeholder='Name' />
+                <FormControl v-model='label.description' placeholder='Description' />
+                <FormControl v-model='label.type' placeholder='Type' type='select'
+                             :options='["String", "Number", "Date"]' />
+              </FormField>
+            </template>
+
+            <template v-else>
+              <FormField>
+                <FormControl
+                  type='select'
+                  :options='templateLabelsNames'
+                  v-model='label.labelName'
+                  placeholder='Name'
+                />
+              </FormField>
+            </template>
+
           </div>
         </div>
 
@@ -509,5 +516,3 @@ class ImageLabeler {
     </div>
   </div>
 </template>
-
-<style></style>

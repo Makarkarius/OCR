@@ -44,7 +44,7 @@ const isUserSearchModalActive = ref(false)
       color='contrast'
       :icon='mdiPlus'
       @click='isUserSearchModalActive = true'
-      class='absolute right-2.5 top-2.5 z-10'
+      class='size-9 absolute right-1.5 top-1.5 z-10'
     />
 
     <table>

@@ -81,10 +81,9 @@ const reset = () => {
 
         <FormFilePicker
           v-model='form.rawReferenceDocument'
-          class='h-1/6 max-w-full absolute top-8 right-2'
+          class='size-9 max-w-full absolute top-8 right-2'
           color='contrast'
-          :is-round-icon='true'
-          accept='image/png, image/jpeg, .pdf'
+          accept='image/png, image/jpeg'
         />
       </div>
 
@@ -117,10 +116,9 @@ const reset = () => {
         <FormFilePicker
           v-model='form.rawOtherDocuments'
           :is-multiple='true'
-          class='h-1/6 max-w-full absolute top-8 right-2'
+          class='size-9 max-w-full absolute top-8 right-2'
           color='contrast'
-          :is-round-icon='true'
-          accept='image/png, image/jpeg, .pdf'
+          accept='image/png, image/jpeg'
         />
       </div>
     </div>

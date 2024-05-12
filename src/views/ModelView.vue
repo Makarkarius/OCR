@@ -10,12 +10,12 @@ import CardBox from '@/components/CardBox.vue'
 import { documentTypes, userRoles } from '@/config'
 import { storeToRefs } from 'pinia'
 import { isPDF } from '@/misc'
-import LineChart from '@/components/Charts/LineChart.vue'
-import { sampleChartData } from '@/components/Charts/chart.config'
 import UserList from '@/components/UserList.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import ModelDocumentsTable from '@/components/ModelDocumentsTable.vue'
+import CardBoxModal from '@/components/CardBoxModal.vue'
+import ModelDocumentsFreeTable from '@/components/ModelDocumentsFreeTable.vue'
 
 const mainStore = useMainStore()
 const router = useRouter()
@@ -31,8 +31,8 @@ const form = ref({
 })
 
 onBeforeMount(async () => {
+  mainStore.fetchUsers()
   await model.value.fetch(route.params.id)
-  await mainStore.fetchUsers()
   form.value.participants = model.value.participants.slice()
   isLoaded.value = true
 })
@@ -57,13 +57,14 @@ const templateDocument = computed(() => {
   )
 })
 
-const labeledDocuments = computed(() => {
+const freeDocuments = computed(() => {
   if (!model.value.documents || model.value.documents.length === 0) {
-    return 0
+    return model.value.documents
   }
-  return model.value.documents.filter((doc) =>
-    doc.isLabeled === true
-  ).length
+
+  return model.value.documents.filter((document) => {
+    return document.type === documentTypes.free
+  })
 })
 
 const sortedDocuments = computed(() => {
@@ -71,9 +72,7 @@ const sortedDocuments = computed(() => {
     return model.value.documents
   }
 
-  const sorted = model.value.documents.map(a => {
-    return { ...a }
-  })
+  let sorted = model.value.documents.slice()
 
   sorted.sort((a, b) => {
     if (a.isLabeled && !b.isLabeled) {
@@ -90,8 +89,25 @@ const sortedDocuments = computed(() => {
     }
     return a.name > b.name ? 1 : -1
   })
+
+  sorted = sorted.filter((document) => {
+    return document.type !== documentTypes.free
+  })
+
+  if (!isManager.value) {
+    sorted = sorted.filter((document) => {
+      if (document.type === documentTypes.template) {
+        return true
+      }
+
+      return !(document.isLabeled && document.assessors[0].id === mainStore.user.id)
+    })
+  }
+
   return sorted
 })
+
+const isDeleteModalActive = ref(false)
 
 const toLabeler = (id) => {
   router.push('/labeler/' + id)
@@ -106,12 +122,25 @@ const uploadDocuments = async () => {
   }
 }
 
+const uploadFreeDocuments = async () => {
+  try {
+    await model.value.addDocuments(form.value.documents, documentTypes.free)
+    await model.value.fetch()
+  } catch (err) {
+    console.log(err)
+  }
+}
+
 const saveModel = async () => {
   const filteredUsers = form.value.participants.filter((assessor) => {
     return !model.value.participants.find((user) => {
       return user.id === assessor.id
     })
   })
+
+  if (filteredUsers.length === 0) {
+    return
+  }
 
   try {
     await model.value.patch({
@@ -122,9 +151,31 @@ const saveModel = async () => {
   }
 }
 
+const showDeleteModel = async () => {
+  isDeleteModalActive.value = true
+}
+
+const deleteModel = async () => {
+  try {
+    await mainStore.model.delete()
+    await router.push('/models')
+  } catch (err) {
+    console.log(err)
+  }
+}
+
 </script>
 
 <template>
+  <CardBoxModal
+    v-model='isDeleteModalActive'
+    button='danger'
+    button-label='Yes'
+    :hasCancel='true'
+    :title='`Are you sure you want to delete ` + model.name + ` model?`'
+    @confirm='deleteModel'
+  />
+
   <LayoutAuthenticated>
     <SectionMain>
       <CardBox form @submit.prevent='' class='relative text-nowrap md:w-full lg:w-11/12 mx-auto min-h-[82vh]'>
@@ -139,14 +190,19 @@ const saveModel = async () => {
 
             <div class='relative h-[35vh] max-h-[35vh] flex flex-row justify-between gap-2'>
               <div class='basis-4/12 border-gray-100 border-2 rounded-t-md'>
-                <LineChart :data='sampleChartData()' />
+                <ModelDocumentsFreeTable
+                  class='overflow-y-scroll h-full'
+                  v-model:documents='freeDocuments'
+                  v-model:uploadDocuments='form.documents'
+                  @upload='uploadFreeDocuments'
+                />
               </div>
 
               <div class='relative basis-4/12 border-gray-100 border-2 rounded-t-md overflow-y-clip overflow-x-scroll'>
                 <UserList
+                  class='overflow-y-scroll overflow-x-scroll h-full w-full'
                   v-model:allUsers='mainStore.users'
                   v-model:users='form.participants'
-                  class='overflow-y-scroll overflow-x-scroll h-full w-full'
                   withSearch
                 />
               </div>
@@ -194,7 +250,7 @@ const saveModel = async () => {
         <template #footer>
           <BaseButtons v-if='isManager' class='w-full justify-end'>
             <BaseButton color='info' label='Save' @click='saveModel' />
-            <BaseButton color='danger' outline label='Delete' @click='deleteModel' />
+            <BaseButton color='danger' outline label='Delete' @click='showDeleteModel' />
           </BaseButtons>
         </template>
       </CardBox>

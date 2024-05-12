@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
-import { DEV_SERVER_URL } from './src/config'
+import { SERVER_URL } from './src/config'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -36,7 +36,7 @@ export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
           strictPort: true,
           proxy: {
             '/api': {
-              target: DEV_SERVER_URL,
+              target: SERVER_URL,
               changeOrigin: true,
               secure: false,
               rewrite: (path) => path.replace(/^\/api/, '')

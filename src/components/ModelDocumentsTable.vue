@@ -15,12 +15,12 @@ const props = defineProps({
 })
 
 const documents = defineModel('documents', {
-  type: Array,
+  type: [Array, FileList],
   required: true
 })
 
 const uploadDocuments = defineModel('uploadDocuments', {
-  type: Array,
+  type: [Array, FileList],
   default: []
 })
 
@@ -51,7 +51,7 @@ const upload = () => {
 </script>
 
 <template>
-  <div class='relative mt-[4px]'>
+  <div class='relative pt-[4px]'>
     <progress
       class='absolute flex self-center h-[4px] -mt-[4px] w-full rounded-none z-10'
       max='100'
@@ -61,10 +61,9 @@ const upload = () => {
     <FormFilePicker
       v-if='isManager'
       v-model='uploadDocuments'
-      class='size-9 absolute top-1.5 right-1 z-10'
+      class='size-9 absolute top-1.5 right-1.5 z-10'
       color='contrast'
-      :is-round-icon='true'
-      accept='image/png, image/jpeg, .pdf'
+      accept='image/png, image/jpeg'
       @update:modelValue='upload'
       isMultiple
     />
@@ -123,5 +122,4 @@ const upload = () => {
 th {
   @apply text-center;
 }
-
 </style>

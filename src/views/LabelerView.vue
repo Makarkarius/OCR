@@ -19,6 +19,12 @@ const patchDocument = async () => {
   mainStore.document.isLabeled = true
   mainStore.document.labels = labels.value
 
+  mainStore.document.fill({
+    id: route.params.id,
+    isLabeled: true,
+    labels: labels.value
+  })
+
   try {
     await mainStore.document.patch()
     await router.push('/models/' + mainStore.model.id)

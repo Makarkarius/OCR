@@ -8,6 +8,10 @@ import { documentTypes, userRoles } from '@/config'
 export const useMainStore = defineStore('main', () => {
   class User {
     constructor() {
+      this.init()
+    }
+
+    init() {
       this.id = ''
       this.email = ''
       this.name = ''
@@ -16,7 +20,7 @@ export const useMainStore = defineStore('main', () => {
       this.company = ''
     }
 
-    init(data) {
+    fill(data) {
       if (!data) {
         console.log('failed to init user: payload is empty')
         return
@@ -71,7 +75,7 @@ export const useMainStore = defineStore('main', () => {
           }
         )
         .then((result) => {
-          this.init(result.data)
+          this.fill(result.data)
         })
         .catch((err) => {
           handleApiError(err)
@@ -94,7 +98,7 @@ export const useMainStore = defineStore('main', () => {
           }
         )
         .then((result) => {
-          this.init(result.data)
+          this.fill(result.data)
         })
         .catch((err) => {
           if (err.response.status === 400) {
@@ -133,18 +137,25 @@ export const useMainStore = defineStore('main', () => {
 
   class Model {
     constructor() {
+      this.reset()
+    }
+
+    reset() {
       this.id = ''
       this.createdAt = ''
-
       this.name = ''
       this.description = ''
       this.documents = []
       this.participants = []
       this.previewURL = ''
       this.userRole = ''
+      this.totalDocuments = 0
+      this.datasetDocuments = 0
+      this.labeledDocuments = 0
+      this.isTemplateLabeled = false
     }
 
-    init(data) {
+    fill(data) {
       if (!data) {
         console.log('failed to init model: data is empty')
         return
@@ -176,6 +187,18 @@ export const useMainStore = defineStore('main', () => {
       }
       if (data.participants) {
         this.participants = data.participants
+      }
+      if (data.totalDocuments) {
+        this.totalDocuments = data.totalDocuments
+      }
+      if (data.datasetDocuments) {
+        this.datasetDocuments = data.datasetDocuments
+      }
+      if (data.labeledDocuments) {
+        this.labeledDocuments = data.labeledDocuments
+      }
+      if (data.isTemplateLabeled) {
+        this.isTemplateLabeled = data.isTemplateLabeled
       }
     }
 
@@ -213,7 +236,7 @@ export const useMainStore = defineStore('main', () => {
         .get('api/v1/project/' + requestedID, {
           withCredentials: true
         }).then((response) => {
-          this.init(response.data)
+          this.fill(response.data)
         }).catch((err) => {
           handleApiError(err)
         })
@@ -235,7 +258,7 @@ export const useMainStore = defineStore('main', () => {
           }
         )
 
-        this.init(response.data)
+        this.fill(response.data)
 
         // await addDocument(form.rawReferenceDocument)
         //
@@ -321,6 +344,9 @@ export const useMainStore = defineStore('main', () => {
           },
           withCredentials: true
         })
+        .then(() => {
+          this.reset()
+        })
         .catch((err) => {
           handleApiError(err)
         })
@@ -329,8 +355,13 @@ export const useMainStore = defineStore('main', () => {
 
   class Document {
     constructor() {
+      this.init()
+    }
+
+    init() {
       this.id = ''
       this.labels = []
+      this.templateLabels = []
       this.type = ''
       this.urlPath = ''
       this.createdAt = ''
@@ -341,18 +372,10 @@ export const useMainStore = defineStore('main', () => {
     }
 
     reset() {
-      this.id = ''
-      this.labels = []
-      this.type = ''
-      this.urlPath = ''
-      this.createdAt = ''
-      this.assessors = []
-      this.isValid = false
-      this.isLearnt = false
-      this.isLabeled = false
+      this.init()
     }
 
-    init(data) {
+    fill(data) {
       if (!data) {
         console.log('failed to init document: data is empty')
         return
@@ -365,6 +388,9 @@ export const useMainStore = defineStore('main', () => {
       }
       if (data.labels) {
         this.labels = data.labels
+      }
+      if (data.templateLabels) {
+        this.templateLabels = data.templateLabels
       }
       if (data.type) {
         this.type = data.type
@@ -384,8 +410,17 @@ export const useMainStore = defineStore('main', () => {
       if (data.isLearnt) {
         this.isLearnt = data.isLearnt
       }
-      if (data.labeled) {
+      if (data.isLabeled) {
         this.isLabeled = data.isLabeled
+      }
+      if (data.labeled) {
+        this.isLabeled = data.labeled
+      }
+    }
+
+    getAssessor() {
+      if (this.assessors && this.assessors.length > 0) {
+        return this.assessors[0]
       }
     }
 
@@ -394,7 +429,7 @@ export const useMainStore = defineStore('main', () => {
         .get('api/v1/document/' + id, {
           withCredentials: true
         }).then((response) => {
-          this.init(response.data)
+          this.fill(response.data)
         }).catch((err) => {
           handleApiError(err)
         })
@@ -414,14 +449,10 @@ export const useMainStore = defineStore('main', () => {
             withCredentials: true
           })
         .then((result) => {
-          this.init(result.data)
+          this.fill(result.data)
         })
         .catch((err) => {
-          if (err.message) {
-            console.log(err.message)
-          } else {
-            console.error(err)
-          }
+          handleApiError(err)
         })
     }
   }
@@ -443,6 +474,17 @@ export const useMainStore = defineStore('main', () => {
       .get(`data-sources/clients.json?v=3`)
       .then((result) => {
         clients.value = result?.data?.data
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+  }
+
+  function fetchSampleHistory() {
+    axios
+      .get(`data-sources/history.json`)
+      .then((result) => {
+        history.value = result?.data?.data
       })
       .catch((error) => {
         if (error.response) {
@@ -470,25 +512,6 @@ export const useMainStore = defineStore('main', () => {
       })
   }
 
-  function fetchSampleHistory() {
-    axios
-      .get(`data-sources/history.json`)
-      .then((result) => {
-        history.value = result?.data?.data
-      })
-      .catch((error) => {
-        if (error.response) {
-          console.log(error.response.data)
-          console.log(error.response.status)
-          console.log(error.response.headers)
-        } else if (error.request) {
-          console.log(error.request)
-        } else {
-          console.log('Error', error.message)
-        }
-      })
-  }
-
   async function fetchModels() {
     await axios
       .get('/api/v1/project?userId=' + user.value.id, {
@@ -502,7 +525,7 @@ export const useMainStore = defineStore('main', () => {
 
         result.data.forEach((model) => {
           const newModel = new Model()
-          newModel.init(model)
+          newModel.fill(model)
 
           models.value.push(newModel)
         })

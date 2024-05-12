@@ -49,7 +49,8 @@ const props = defineProps({
   outline: Boolean,
   active: Boolean,
   disabled: Boolean,
-  roundedFull: Boolean
+  roundedFull: Boolean,
+  full: Boolean
 })
 
 const is = computed(() => {
@@ -91,6 +92,7 @@ const componentClass = computed(() => {
     props.border ? props.border : 'border',
     props.disabled ? 'cursor-not-allowed' : 'cursor-pointer',
     props.roundedFull ? 'rounded-full' : 'rounded',
+    props.full ? 'size-full' : '',
     getButtonColor(props.color, props.outline, !props.disabled, props.active)
   ]
 

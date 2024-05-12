@@ -32,7 +32,7 @@ const createModel = async () => {
       }
     })
 
-    mainStore.model.init({
+    mainStore.model.fill({
       name: form.value.name,
       description: form.value.description,
       participants: assessors
