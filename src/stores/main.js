@@ -259,12 +259,6 @@ export const useMainStore = defineStore('main', () => {
         )
 
         this.fill(response.data)
-
-        // await addDocument(form.rawReferenceDocument)
-        //
-        // for (let i = 0; i < form.rawOtherDocuments.length; i++) {
-        //   await addDocument(form.rawOtherDocuments[i])
-        // }
       } catch (err) {
         handleApiError(err)
       }
@@ -464,8 +458,9 @@ export const useMainStore = defineStore('main', () => {
 
   const user = ref(new User())
   const users = ref([])
-  const models = ref([])
+
   const model = ref(new Model())
+  const models = ref([])
 
   const document = ref(new Document())
 

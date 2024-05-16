@@ -189,18 +189,23 @@ const deleteModel = async () => {
             </div>
 
             <div class='relative h-[35vh] max-h-[35vh] flex flex-row justify-between gap-2'>
-              <div class='basis-4/12 border-gray-100 border-2 rounded-t-md'>
+              <div class='basis-4/12 text-center flex flex-col justify-between'>
+                <div class='basis-1/12 font-bold'>Upload documents for data extraction</div>
+
                 <ModelDocumentsFreeTable
-                  class='overflow-y-scroll h-full'
+                  class='overflow-y-scroll basis-11/12 rounded-t-md border-gray-100 border-2'
                   v-model:documents='freeDocuments'
                   v-model:uploadDocuments='form.documents'
                   @upload='uploadFreeDocuments'
                 />
               </div>
 
-              <div class='relative basis-4/12 border-gray-100 border-2 rounded-t-md overflow-y-clip overflow-x-scroll'>
+              <div
+                class='relative basis-4/12 overflow-y-clip overflow-x-scroll text-center flex flex-col justify-between'
+              >
+                <div class='basis-1/12 font-bold'>Assessors</div>
                 <UserList
-                  class='overflow-y-scroll overflow-x-scroll h-full w-full'
+                  class='overflow-y-scroll border-gray-100 border-2 rounded-t-md rounded-b-none overflow-x-scroll w-full basis-11/12'
                   v-model:allUsers='mainStore.users'
                   v-model:users='form.participants'
                   withSearch
@@ -208,19 +213,24 @@ const deleteModel = async () => {
               </div>
 
               <div
-                class='basis-4/12 w-full border-gray-100 border-2 rounded-t-md overflow-hidden flex justify-center cursor-pointer'
-                @click='toLabeler(templateDocument.id)'
+                class='basis-4/12 w-full overflow-hidden flex flex-col justify-between text-center'
               >
-                <embed
-                  v-if='isPDF(templateDocument?.urlPath)'
-                  class='h-56 w-full object-cover'
-                  :src='templateDocument?.urlPath'
-                />
-                <img
-                  v-else
-                  class='h-full object-cover'
-                  :src='templateDocument?.urlPath'
-                  alt='Template document preview' />
+                <div class='basis-1/12 font-bold'>Template document</div>
+                <div
+                  class='border-gray-100 basis-11/12 border-2 rounded-t-md overflow-clip flex justify-center cursor-pointer '
+                  @click='toLabeler(templateDocument.id)'
+                >
+                  <embed
+                    v-if='isPDF(templateDocument?.urlPath)'
+                    class='h-56 w-full object-cover'
+                    :src='templateDocument?.urlPath'
+                  />
+                  <img
+                    v-else
+                    class='h-full object-cover'
+                    :src='templateDocument?.urlPath'
+                    alt='Template document preview' />
+                </div>
               </div>
             </div>
 

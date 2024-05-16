@@ -8,8 +8,14 @@ export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
   switch (command) {
     case 'build':
       return {
+        build: {
+          target: 'esnext'
+        },
         optimizeDeps: {
-          exclude: ['pdfjs-dist']
+          exclude: ['pdfjs-dist'],
+          esbuildOptions: {
+            target: 'esnext'
+          }
         },
         base: '/',
         plugins: [vue()],

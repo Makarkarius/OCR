@@ -1,7 +1,6 @@
 const containerMaxW = 'xl:max-w-8xl xl:mx-auto'
 
 const SERVER_URL = 'http://192.168.100.113:8080'
-const DEV_SERVER_URL = 'http://158.160.143.123:8080'
 
 const userRoles = {
   assessor: 'ROLE_ASSESSOR',
@@ -20,7 +19,6 @@ export {
   containerMaxW,
 
   SERVER_URL,
-  DEV_SERVER_URL,
 
   userRoles,
   documentTypes,

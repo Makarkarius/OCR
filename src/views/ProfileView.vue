@@ -4,20 +4,18 @@ import { useMainStore } from '@/stores/main'
 import { mdiAccount, mdiAsterisk, mdiFormTextboxPassword, mdiMail } from '@mdi/js'
 import SectionMain from '@/components/SectionMain.vue'
 import CardBox from '@/components/CardBox.vue'
-import BaseDivider from '@/components/BaseDivider.vue'
 import FormField from '@/components/FormField.vue'
 import FormControl from '@/components/FormControl.vue'
-import FormFilePicker from '@/components/FormFilePicker.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
-import UserCard from '@/components/UserCard.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
 
 const mainStore = useMainStore()
 
 const profileForm = reactive({
-  name: mainStore.user.value.name,
-  email: mainStore.user.value.email
+  name: mainStore.user.name,
+  surname: mainStore.user.surname,
+  email: mainStore.user.email
 })
 
 const passwordForm = reactive({
@@ -26,36 +24,33 @@ const passwordForm = reactive({
   password_confirmation: ''
 })
 
-// const submitProfile = () => {
-//   mainStore.setUser(profileForm)
-// }
-
-const submitPass = () => {
-  //
-}
 </script>
 
 <template>
   <LayoutAuthenticated>
     <SectionMain>
-      <UserCard class='mb-6' />
-
       <div class='grid grid-cols-1 lg:grid-cols-2 gap-6'>
         <CardBox is-form @submit.prevent=''>
-          <FormField label='Avatar' help='Max 500kb'>
-            <FormFilePicker label='Upload' />
-          </FormField>
 
-          <FormField label='Name' help='Required. Your name'>
+          <FormField label='Name' help='Your name'>
             <FormControl
               v-model='profileForm.name'
               :icon='mdiAccount'
               name='username'
               required
-              autocomplete='username'
+              autocomplete='given-name'
             />
           </FormField>
-          <FormField label='E-mail' help='Required. Your e-mail'>
+          <FormField label='Surname' help='Your surname'>
+            <FormControl
+              v-model='profileForm.surname'
+              :icon='mdiAccount'
+              name='username'
+              required
+              autocomplete='family-name'
+            />
+          </FormField>
+          <FormField label='E-mail' help='Your e-mail'>
             <FormControl
               v-model='profileForm.email'
               :icon='mdiMail'
@@ -69,13 +64,12 @@ const submitPass = () => {
           <template #footer>
             <BaseButtons>
               <BaseButton color='info' type='submit' label='Submit' />
-              <BaseButton color='info' label='Options' outline />
             </BaseButtons>
           </template>
         </CardBox>
 
-        <CardBox is-form @submit.prevent='submitPass'>
-          <FormField label='Current password' help='Required. Your current password'>
+        <CardBox is-form @submit.prevent=''>
+          <FormField label='Current password' help='Your current password'>
             <FormControl
               v-model='passwordForm.password_current'
               :icon='mdiAsterisk'
@@ -86,9 +80,7 @@ const submitPass = () => {
             />
           </FormField>
 
-          <BaseDivider />
-
-          <FormField label='New password' help='Required. New password'>
+          <FormField label='New password' help='New password'>
             <FormControl
               v-model='passwordForm.password'
               :icon='mdiFormTextboxPassword'
@@ -99,7 +91,7 @@ const submitPass = () => {
             />
           </FormField>
 
-          <FormField label='Confirm password' help='Required. New password one more time'>
+          <FormField label='Confirm password' help='New password one more time'>
             <FormControl
               v-model='passwordForm.password_confirmation'
               :icon='mdiFormTextboxPassword'
@@ -113,7 +105,6 @@ const submitPass = () => {
           <template #footer>
             <BaseButtons>
               <BaseButton type='submit' color='info' label='Submit' />
-              <BaseButton color='info' label='Options' outline />
             </BaseButtons>
           </template>
         </CardBox>
