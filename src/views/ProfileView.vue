@@ -1,24 +1,23 @@
 <script setup>
 import { reactive } from 'vue'
 import { useMainStore } from '@/stores/main'
-import { mdiAccount, mdiMail, mdiAsterisk, mdiFormTextboxPassword, mdiGithub } from '@mdi/js'
+import { mdiAccount, mdiAsterisk, mdiFormTextboxPassword, mdiMail } from '@mdi/js'
 import SectionMain from '@/components/SectionMain.vue'
 import CardBox from '@/components/CardBox.vue'
-import BaseDivider from '@/components/BaseDivider.vue'
 import FormField from '@/components/FormField.vue'
 import FormControl from '@/components/FormControl.vue'
-import FormFilePicker from '@/components/FormFilePicker.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
-import UserCard from '@/components/UserCard.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
-import SectionTitleLineWithButton from '@/components/SectionTitleLineWithButton.vue'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const mainStore = useMainStore()
+const notificationsStore = useNotificationsStore()
 
 const profileForm = reactive({
-  name: mainStore.userName,
-  email: mainStore.userEmail
+  name: mainStore.user.name,
+  surname: mainStore.user.surname,
+  email: mainStore.user.email
 })
 
 const passwordForm = reactive({
@@ -27,106 +26,123 @@ const passwordForm = reactive({
   password_confirmation: ''
 })
 
-const submitProfile = () => {
-  mainStore.setUser(profileForm)
+const updateUser = async () => {
+  try {
+    await mainStore.user.patch({
+      email: profileForm.email,
+      name: profileForm.name,
+      surname: profileForm.surname
+    })
+    notificationsStore.renderMsg('Profile was updated!', notificationsStore.types.success)
+  } catch (err) {
+    notificationsStore.renderError(err)
+  }
 }
 
-const submitPass = () => {
-  //
+const updatePassword = async () => {
+  try {
+    if (passwordForm.password !== passwordForm.password_confirmation) {
+      notificationsStore.renderError(new Error('Passwords does not match!'))
+      return
+    }
+    if (passwordForm.password.length === 0) {
+      notificationsStore.renderError(new Error('Password can\'t be empty!'))
+      return
+    }
+
+    await mainStore.user.patchPassword(passwordForm.password_current, passwordForm.password)
+
+    passwordForm.password_current = ''
+    passwordForm.password = ''
+    passwordForm.password_confirmation = ''
+
+    notificationsStore.renderMsg('Password was updated!', notificationsStore.types.success)
+  } catch (err) {
+    notificationsStore.renderError(err)
+  }
 }
+
 </script>
 
 <template>
   <LayoutAuthenticated>
     <SectionMain>
-      <SectionTitleLineWithButton :icon="mdiAccount" title="Profile" main>
-        <BaseButton
-          href="https://github.com/justboil/admin-one-vue-tailwind"
-          target="_blank"
-          :icon="mdiGithub"
-          label="Star on GitHub"
-          color="contrast"
-          rounded-full
-          small
-        />
-      </SectionTitleLineWithButton>
+      <div class='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+        <CardBox is-form @submit.prevent=''>
 
-      <UserCard class="mb-6" />
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CardBox is-form @submit.prevent="submitProfile">
-          <FormField label="Avatar" help="Max 500kb">
-            <FormFilePicker label="Upload" />
-          </FormField>
-
-          <FormField label="Name" help="Required. Your name">
+          <FormField label='Name' help='Your name'>
             <FormControl
-              v-model="profileForm.name"
-              :icon="mdiAccount"
-              name="username"
+              v-model='profileForm.name'
+              :icon='mdiAccount'
+              name='username'
               required
-              autocomplete="username"
+              autocomplete='given-name'
             />
           </FormField>
-          <FormField label="E-mail" help="Required. Your e-mail">
+          <FormField label='Surname' help='Your surname'>
             <FormControl
-              v-model="profileForm.email"
-              :icon="mdiMail"
-              type="email"
-              name="email"
+              v-model='profileForm.surname'
+              :icon='mdiAccount'
+              name='username'
               required
-              autocomplete="email"
+              autocomplete='family-name'
+            />
+          </FormField>
+          <FormField label='E-mail' help='Your e-mail'>
+            <FormControl
+              v-model='profileForm.email'
+              :icon='mdiMail'
+              type='email'
+              name='email'
+              required
+              autocomplete='email'
             />
           </FormField>
 
           <template #footer>
             <BaseButtons>
-              <BaseButton color="info" type="submit" label="Submit" />
-              <BaseButton color="info" label="Options" outline />
+              <BaseButton color='info' type='submit' label='Submit' @click='updateUser' />
             </BaseButtons>
           </template>
         </CardBox>
 
-        <CardBox is-form @submit.prevent="submitPass">
-          <FormField label="Current password" help="Required. Your current password">
+        <CardBox is-form @submit.prevent=''>
+          <FormField label='Current password' help='Your current password'>
             <FormControl
-              v-model="passwordForm.password_current"
-              :icon="mdiAsterisk"
-              name="password_current"
-              type="password"
+              v-model='passwordForm.password_current'
+              :icon='mdiAsterisk'
+              name='password_current'
+              type='password'
               required
-              autocomplete="current-password"
+              autocomplete='current-password'
             />
           </FormField>
 
-          <BaseDivider />
-
-          <FormField label="New password" help="Required. New password">
+          <FormField label='New password' help='New password'>
             <FormControl
-              v-model="passwordForm.password"
-              :icon="mdiFormTextboxPassword"
-              name="password"
-              type="password"
+              v-model='passwordForm.password'
+              :icon='mdiFormTextboxPassword'
+              name='password'
+              type='password'
               required
-              autocomplete="new-password"
+              autocomplete='new-password'
             />
           </FormField>
 
-          <FormField label="Confirm password" help="Required. New password one more time">
+          <FormField label='Confirm password' help='New password one more time'>
             <FormControl
-              v-model="passwordForm.password_confirmation"
-              :icon="mdiFormTextboxPassword"
-              name="password_confirmation"
-              type="password"
+              v-model='passwordForm.password_confirmation'
+              :icon='mdiFormTextboxPassword'
+              name='password_confirmation'
+              type='password'
               required
-              autocomplete="new-password"
+              autocomplete='new-password'
             />
           </FormField>
 
           <template #footer>
             <BaseButtons>
-              <BaseButton type="submit" color="info" label="Submit" />
-              <BaseButton color="info" label="Options" outline />
+              <BaseButton type='submit' color='info' label='Submit' @click='updatePassword' />
             </BaseButtons>
           </template>
         </CardBox>

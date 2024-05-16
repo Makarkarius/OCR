@@ -2,8 +2,22 @@ export const chartColors = {
   default: {
     primary: '#00D1B2',
     info: '#209CEE',
-    danger: '#FF3860'
+    danger: '#FF3860',
+    simple1: '#22e83f',
+    simple2: '#e1f52c',
+    simple3: '#ffb22e',
+    simple4: '#ff6228',
+    simple5: '#ff2727'
   }
+}
+
+export const randomChartColor = (idx = -1) => {
+  const colors = Object.values(chartColors.default)
+  if (idx >= 0) {
+    return colors[idx % colors.length]
+  }
+
+  return colors[Math.round(Math.random() * 1e5) % colors.length]
 }
 
 const randomChartData = (n) => {
@@ -16,7 +30,7 @@ const randomChartData = (n) => {
   return data
 }
 
-const datasetObject = (color, points) => {
+export const datasetObject = (color, data, label = 'Data') => {
   return {
     fill: false,
     borderColor: chartColors.default[color],
@@ -30,13 +44,14 @@ const datasetObject = (color, points) => {
     pointHoverRadius: 4,
     pointHoverBorderWidth: 15,
     pointRadius: 4,
-    data: randomChartData(points),
-    tension: 0.5,
+    data: data,
+    label: label,
+    tension: 0,
     cubicInterpolationMode: 'default'
   }
 }
 
-export const sampleChartData = (points = 9) => {
+export const sampleChartData = (points = 10) => {
   const labels = []
 
   for (let i = 1; i <= points; i++) {
@@ -46,9 +61,9 @@ export const sampleChartData = (points = 9) => {
   return {
     labels,
     datasets: [
-      datasetObject('primary', points),
-      datasetObject('info', points),
-      datasetObject('danger', points)
+      datasetObject('primary', randomChartData(points)),
+      datasetObject('info', randomChartData(points)),
+      datasetObject('danger', randomChartData(points))
     ]
   }
 }

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { mdiCashMinus, mdiCashPlus, mdiReceipt, mdiCreditCardOutline } from '@mdi/js'
+import { mdiCashMinus, mdiCashPlus, mdiCreditCardOutline, mdiReceipt } from '@mdi/js'
 import CardBox from '@/components/CardBox.vue'
 import BaseLevel from '@/components/BaseLevel.vue'
 import PillTag from '@/components/PillTag.vue'
@@ -8,7 +8,7 @@ import IconRounded from '@/components/IconRounded.vue'
 
 const props = defineProps({
   amount: {
-    type: Number,
+    type: [Number, String],
     required: true
   },
   date: {
@@ -59,23 +59,23 @@ const icon = computed(() => {
 </script>
 
 <template>
-  <CardBox class="mb-6 last:mb-0">
+  <CardBox class='mb-6 last:mb-0'>
     <BaseLevel>
-      <BaseLevel type="justify-start">
-        <IconRounded :icon="icon.icon" :color="icon.type" class="md:mr-6" />
-        <div class="text-center space-y-1 md:text-left md:mr-6">
-          <h4 class="text-xl">${{ amount }}</h4>
-          <p class="text-gray-500 dark:text-slate-400">
+      <BaseLevel type='justify-start'>
+        <IconRounded :icon='icon.icon' :color='icon.type' class='md:mr-6' />
+        <div class='text-center space-y-1 md:text-left md:mr-6'>
+          <h4 class='text-xl'>{{ amount }}</h4>
+          <p class='text-gray-500 dark:text-slate-400'>
             <b>{{ date }}</b> via {{ business }}
           </p>
         </div>
       </BaseLevel>
-      <div class="text-center md:text-right space-y-2">
-        <p class="text-sm text-gray-500">
+      <div class='text-center md:text-right space-y-2'>
+        <p class='text-sm text-gray-500'>
           {{ name }}
         </p>
         <div>
-          <PillTag :color="icon.type" :label="type" small />
+          <PillTag :color='icon.type' :label='type' small />
         </div>
       </div>
     </BaseLevel>

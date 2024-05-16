@@ -1,9 +1,10 @@
 <script setup>
 import { containerMaxW } from '@/config.js'
-</script>
+import PopupBar from '@/components/PopupBar.vue'</script>
 
 <template>
-  <section class="p-6" :class="containerMaxW">
+  <section class='relative p-6' :class='containerMaxW'>
+    <PopupBar />
     <slot />
   </section>
 </template>

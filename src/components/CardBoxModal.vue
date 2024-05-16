@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue'
-import { mdiClose } from '@mdi/js'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import CardBox from '@/components/CardBox.vue'
@@ -54,18 +53,18 @@ window.addEventListener('keydown', (e) => {
   <OverlayLayer v-show="value" @overlay-click="cancel">
     <CardBox
       v-show="value"
-      class="shadow-lg max-h-modal w-11/12 md:w-3/5 lg:w-2/5 xl:w-4/12 z-50"
+      class="shadow-lg max-h-modal w-11/12 md:w-1/2 lg:w-1/4 xl:w-4/12 z-50"
       is-modal
     >
       <CardBoxComponentTitle :title="title">
-        <BaseButton
+        <!-- <BaseButton
           v-if="hasCancel"
           :icon="mdiClose"
           color="whiteDark"
           small
           rounded-full
           @click.prevent="cancel"
-        />
+        /> -->
       </CardBoxComponentTitle>
 
       <div class="space-y-3">

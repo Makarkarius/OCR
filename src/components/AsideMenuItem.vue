@@ -1,10 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { mdiMinus, mdiPlus } from '@mdi/js'
 import { getButtonColor } from '@/colors.js'
 import BaseIcon from '@/components/BaseIcon.vue'
 import AsideMenuList from '@/components/AsideMenuList.vue'
+
+const route = useRoute()
 
 const props = defineProps({
   item: {
@@ -46,41 +48,45 @@ const menuClick = (event) => {
   <li>
     <component
       :is="item.to ? RouterLink : 'a'"
-      v-slot="vSlot"
-      :to="item.to ?? null"
-      :href="item.href ?? null"
-      :target="item.target ?? null"
-      class="flex cursor-pointer"
-      :class="componentClass"
-      @click="menuClick"
+      v-slot='vSlot'
+      :to='item.to ?? null'
+      :href='item.href ?? null'
+      :target='item.target ?? null'
+      class='flex cursor-pointer'
+      :class='componentClass'
+      @click='menuClick'
     >
       <BaseIcon
-        v-if="item.icon"
-        :path="item.icon"
-        class="flex-none"
-        :class="[vSlot && vSlot.isExactActive ? asideMenuItemActiveStyle : '']"
-        w="w-16"
-        :size="18"
+        v-if='item.icon'
+        :path='item.icon'
+        class='flex-none'
+        :class="[
+          vSlot &&
+          (vSlot.route.fullPath.includes(route.fullPath) || route.fullPath.includes(vSlot.route.fullPath)) ?
+          asideMenuItemActiveStyle : ''
+        ]"
+        w='w-16'
+        :size='18'
       />
       <span
-        class="grow text-ellipsis line-clamp-1"
+        class='grow text-ellipsis line-clamp-1'
         :class="[
           { 'pr-12': !hasDropdown },
-          vSlot && vSlot.isExactActive ? asideMenuItemActiveStyle : ''
+          vSlot && (vSlot.route.fullPath.includes(route.fullPath) || route.fullPath.includes(vSlot.route.fullPath)) ? asideMenuItemActiveStyle : ''
         ]"
-        >{{ item.label }}</span
+      >{{ item.label }}</span
       >
       <BaseIcon
-        v-if="hasDropdown"
-        :path="isDropdownActive ? mdiMinus : mdiPlus"
-        class="flex-none"
+        v-if='hasDropdown'
+        :path='isDropdownActive ? mdiMinus : mdiPlus'
+        class='flex-none'
         :class="[vSlot && vSlot.isExactActive ? asideMenuItemActiveStyle : '']"
-        w="w-12"
+        w='w-12'
       />
     </component>
     <AsideMenuList
-      v-if="hasDropdown"
-      :menu="item.menu"
+      v-if='hasDropdown'
+      :menu='item.menu'
       :class="['aside-menu-dropdown', isDropdownActive ? 'block dark:bg-slate-800/50' : 'hidden']"
       is-dropdown-list
     />

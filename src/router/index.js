@@ -1,41 +1,66 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import Style from '@/views/StyleView.vue'
-import Home from '@/views/HomeView.vue'
+import Labeler from '@/views/LabelerView.vue'
+import Model from '@/views/ModelView.vue'
+import ModelAnalytics from '@/views/ModelAnalyticsView.vue'
+import Analytics from '@/views/AnalyticsView.vue'
+import Models from '@/views/ModelsView.vue'
+import ModelCreation from '@/views/ModelCreationView.vue'
+import Profile from '@/views/ProfileView.vue'
+import Login from '@/views/LoginView.vue'
+import Users from '@/views/UsersView.vue'
 
 const routes = [
   {
-    meta: {
-      title: 'Select style'
-    },
     path: '/',
-    name: 'style',
-    component: Style
-  },
-  {
-    // Document title tag
-    // We combine it with defaultDocumentTitle set in `src/main.js` on router.afterEach hook
-    meta: {
-      title: 'Dashboard'
-    },
-    path: '/dashboard',
-    name: 'dashboard',
-    component: Home
+    redirect: '/models'
   },
   {
     meta: {
-      title: 'Tables'
+      title: 'Models'
     },
-    path: '/tables',
-    name: 'tables',
-    component: () => import('@/views/TablesView.vue')
+    path: '/models',
+    name: 'models',
+    component: Models
   },
   {
     meta: {
-      title: 'Forms'
+      title: 'Labeler'
     },
-    path: '/forms',
-    name: 'forms',
-    component: () => import('@/views/FormsView.vue')
+    path: '/labeler/:id',
+    name: 'labeler',
+    component: Labeler
+  },
+  {
+    meta: {
+      title: 'Model'
+    },
+    path: '/models/:id',
+    name: 'model',
+    component: Model
+  },
+  {
+    meta: {
+      title: 'Model creation'
+    },
+    path: '/models/new',
+    name: 'model creation',
+    component: ModelCreation
+  },
+  {
+    meta: {
+      title: 'Analytics'
+    },
+    path: '/analytics',
+    name: 'analytics',
+    component: Analytics
+  },
+  {
+    meta: {
+      title: 'Model analytics'
+    },
+    path: '/analytics/:id',
+    name: 'model analytics',
+    component: ModelAnalytics
   },
   {
     meta: {
@@ -43,23 +68,7 @@ const routes = [
     },
     path: '/profile',
     name: 'profile',
-    component: () => import('@/views/ProfileView.vue')
-  },
-  {
-    meta: {
-      title: 'Ui'
-    },
-    path: '/ui',
-    name: 'ui',
-    component: () => import('@/views/UiView.vue')
-  },
-  {
-    meta: {
-      title: 'Responsive layout'
-    },
-    path: '/responsive',
-    name: 'responsive',
-    component: () => import('@/views/ResponsiveView.vue')
+    component: Profile
   },
   {
     meta: {
@@ -67,15 +76,15 @@ const routes = [
     },
     path: '/login',
     name: 'login',
-    component: () => import('@/views/LoginView.vue')
+    component: Login
   },
   {
     meta: {
-      title: 'Error'
+      title: 'Users'
     },
-    path: '/error',
-    name: 'error',
-    component: () => import('@/views/ErrorView.vue')
+    path: '/users',
+    name: 'users',
+    component: Users
   }
 ]
 
@@ -86,5 +95,7 @@ const router = createRouter({
     return savedPosition || { top: 0 }
   }
 })
+
+router.replace(router.currentRoute.value.fullPath)
 
 export default router

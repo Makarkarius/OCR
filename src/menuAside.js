@@ -1,86 +1,48 @@
-import {
-  mdiAccountCircle,
-  mdiMonitor,
-  mdiGithub,
-  mdiLock,
-  mdiAlertCircle,
-  mdiSquareEditOutline,
-  mdiTable,
-  mdiViewList,
-  mdiTelevisionGuide,
-  mdiResponsive,
-  mdiPalette,
-  mdiReact
-} from '@mdi/js'
+import { mdiAccountCircle, mdiChartBar, mdiFileCompare, mdiHumanQueue } from '@mdi/js'
 
-export default [
-  {
-    to: '/dashboard',
-    icon: mdiMonitor,
-    label: 'Dashboard'
-  },
-  {
-    to: '/tables',
-    label: 'Tables',
-    icon: mdiTable
-  },
-  {
-    to: '/forms',
-    label: 'Forms',
-    icon: mdiSquareEditOutline
-  },
-  {
-    to: '/ui',
-    label: 'UI',
-    icon: mdiTelevisionGuide
-  },
-  {
-    to: '/responsive',
-    label: 'Responsive',
-    icon: mdiResponsive
-  },
-  {
-    to: '/',
-    label: 'Styles',
-    icon: mdiPalette
-  },
+const menuAsideUser = [
   {
     to: '/profile',
     label: 'Profile',
     icon: mdiAccountCircle
   },
   {
-    to: '/login',
-    label: 'Login',
-    icon: mdiLock
+    to: '/models',
+    label: 'Models',
+    icon: mdiFileCompare
   },
   {
-    to: '/error',
-    label: 'Error',
-    icon: mdiAlertCircle
-  },
-  {
-    label: 'Dropdown',
-    icon: mdiViewList,
-    menu: [
-      {
-        label: 'Item One'
-      },
-      {
-        label: 'Item Two'
-      }
-    ]
-  },
-  {
-    href: 'https://github.com/justboil/admin-one-vue-tailwind',
-    label: 'GitHub',
-    icon: mdiGithub,
-    target: '_blank'
-  },
-  {
-    href: 'https://github.com/justboil/admin-one-react-tailwind',
-    label: 'React version',
-    icon: mdiReact,
-    target: '_blank'
+    to: '/analytics',
+    label: 'Analytics',
+    icon: mdiChartBar
   }
 ]
+
+const menuAsideAdmin = [
+  {
+    to: '/profile',
+    label: 'Profile',
+    icon: mdiAccountCircle
+  },
+  {
+    to: '/models',
+    label: 'Models',
+    icon: mdiFileCompare
+  },
+  {
+    to: '/analytics',
+    label: 'Analytics',
+    icon: mdiChartBar
+  },
+  {
+    to: '/users',
+    label: 'Users',
+    icon: mdiHumanQueue
+  }
+]
+
+export {
+  menuAsideUser,
+  menuAsideAdmin
+}
+
